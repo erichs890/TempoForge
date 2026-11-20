@@ -53,6 +53,22 @@ public sealed class EffectSettings
         set => Volatile.Write(ref _vocalReducerHighCutHz, Math.Clamp(value, 1000f, 16000f));
     }
 
+    /// <summary>Cópia independente dos valores atuais (usada pela exportação).</summary>
+    public EffectSettings Clone()
+    {
+        var copy = new EffectSettings
+        {
+            EqEnabled = EqEnabled,
+            PreampDb = PreampDb,
+            VocalReducerEnabled = VocalReducerEnabled,
+            VocalReducerAmount = VocalReducerAmount,
+            VocalReducerLowCutHz = VocalReducerLowCutHz,
+            VocalReducerHighCutHz = VocalReducerHighCutHz,
+        };
+        for (int i = 0; i < EqBandCount; i++) copy.SetEqGainDb(i, GetEqGainDb(i));
+        return copy;
+    }
+
     public float GetEqGainDb(int band) => Volatile.Read(ref _eqGainsDb[band]);
 
     public void SetEqGainDb(int band, float gainDb) =>

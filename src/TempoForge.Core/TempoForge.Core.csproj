@@ -4,6 +4,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <!-- PrivateAssets=none: a cópia da libmp3lame precisa chegar aos projetos que referenciam o Core. -->
+    <PackageReference Include="NAudio.Lame" Version="2.1.0" PrivateAssets="none" />
     <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
     <PackageReference Include="NAudio.Vorbis" Version="1.5.0" />
   </ItemGroup>

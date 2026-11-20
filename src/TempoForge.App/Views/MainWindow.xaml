@@ -17,7 +17,9 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,16">
-            <Button DockPanel.Dock="Right" Content="Abrir arquivo…" Click="OnOpenClick" />
+            <Button DockPanel.Dock="Right" Content="Exportar…" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
+                    Margin="8,0,0,0" ToolTip="Salvar o áudio com os ajustes atuais  (Ctrl+E)" />
+            <Button DockPanel.Dock="Right" Content="Abrir arquivo…" Click="OnOpenClick" ToolTip="Ctrl+O" />
             <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
         </DockPanel>

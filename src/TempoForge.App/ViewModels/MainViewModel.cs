@@ -2,7 +2,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.Core;
 using TempoForge.Core.Engine;
+using TempoForge.Core.Export;
 using TempoForge.Core.Looping;
 using TempoForge.Core.Waveform;
 
@@ -117,6 +119,44 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         Semitones = 0;
         Cents = 0;
+    }
+
+    // ---- Exportação ----
+
+    /// <summary>Fotografia dos ajustes atuais para exportar; nulo se não há arquivo aberto.</summary>
+    public ExportOptions? CreateExportOptions()
+    {
+        string? path = _engine.FilePath;
+        if (path == null) return null;
+        bool hasRange = !double.IsNaN(LoopA) && !double.IsNaN(LoopB);
+        return new ExportOptions
+        {
+            SourcePath = path,
+            OutputPath = path,
+            Tempo = Speed,
+            PitchSemitones = Semitones + Cents / 100.0,
+            Effects = _engine.Effects.Clone(),
+            Range = hasRange
+                ? new LoopRegion(AudioFormat.SecondsToFrames(LoopA), AudioFormat.SecondsToFrames(LoopB))
+                : null,
+        };
+    }
+
+    /// <summary>Nome sugerido para o arquivo exportado, indicando os ajustes aplicados.</summary>
+    public string SuggestExportName()
+    {
+        var parts = new List<string>();
+        if (Speed != 1.0) parts.Add($"{Speed:0.00}x");
+        if (Semitones != 0 || Cents != 0) parts.Add(PitchText.Replace(" ", "").Replace("−", "-"));
+        return parts.Count == 0 ? $"{Title} (TempoForge)" : $"{Title} ({string.Join(" ", parts)})";
+    }
+
+    public string DescribeAdjustments()
+    {
+        var parts = new List<string> { $"velocidade {SpeedText}", $"tom {PitchText}" };
+        if (Equalizer.IsEnabled) parts.Add("equalizador ligado");
+        if (VocalReducer.IsEnabled) parts.Add("redução de voz ligada");
+        return "O arquivo será gravado como você está ouvindo: " + string.Join(", ", parts) + ".";
     }
 
     // ---- Loop A-B ----

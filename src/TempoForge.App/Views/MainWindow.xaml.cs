@@ -65,6 +65,15 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnExportClick(object sender, RoutedEventArgs e) => ShowExportDialog();
+
+    private void ShowExportDialog()
+    {
+        var options = _vm.CreateExportOptions();
+        if (options == null) return;
+        new ExportDialog(options, _vm.SuggestExportName(), _vm.DescribeAdjustments()) { Owner = this }.ShowDialog();
+    }
+
     private void OnBackClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(-5);
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(5);
