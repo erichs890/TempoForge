@@ -21,6 +21,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         Equalizer = new EqualizerViewModel(_engine.Effects);
         VocalReducer = new VocalReducerViewModel(_engine.Effects);
+        InitializeSession();
     }
 
     public EqualizerViewModel Equalizer { get; }
@@ -303,26 +304,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Abre um arquivo. Lança exceção com mensagem legível se o formato não puder ser lido.</summary>
-    public void OpenFile(string path)
+    public void OpenFile(string path, bool autoPlay = true)
     {
+        SaveNow(); // guarda os ajustes da faixa anterior antes de trocar
         _peakCancel?.Cancel();
         _engine.Open(path);
+        _currentPath = path;
 
         Title = Path.GetFileNameWithoutExtension(path);
         Duration = _engine.DurationSeconds;
         DurationText = FormatTime(Duration);
         Position = 0;
+        PositionText = FormatTime(0);
         IsLoaded = true;
-        LoopA = double.NaN;
-        LoopB = double.NaN;
-        IsLooping = false;
-        Markers.Clear();
 
-        _peakCancel = new CancellationTokenSource();
-        Peaks = PeakData.Build(path, PeakBuckets, _peakCancel.Token, out _);
+        RestoreTrack(path);
+        LoadPeaks(path);
+        RememberOpened(path);
 
-        _engine.Play();
-        IsPlaying = true;
+        if (autoPlay) _engine.Play();
+        IsPlaying = _engine.IsPlaying;
     }
 
     [RelayCommand]
@@ -364,6 +365,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        SaveNow();
+        _libraryCancel?.Cancel();
         _peakCancel?.Cancel();
         _engine.Dispose();
     }

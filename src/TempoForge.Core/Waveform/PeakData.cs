@@ -22,6 +22,57 @@ public sealed class PeakData
     public int Filled => Volatile.Read(ref _filled);
     public bool IsComplete => Filled >= Buckets;
 
+    private const int FileMagic = 0x314B5054; // "TPK1"
+
+    /// <summary>Grava o resumo completo em disco para reabrir o arquivo sem varrer de novo.</summary>
+    public void Save(string path)
+    {
+        if (!IsComplete) return;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            string temp = path + ".tmp";
+            using (var writer = new BinaryWriter(File.Create(temp)))
+            {
+                writer.Write(FileMagic);
+                writer.Write(Buckets);
+                for (int i = 0; i < Buckets; i++)
+                {
+                    writer.Write(Min[i]);
+                    writer.Write(Max[i]);
+                }
+            }
+            File.Move(temp, path, overwrite: true);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // O cache é só uma otimização.
+        }
+    }
+
+    /// <summary>Lê um resumo salvo; nulo se não existir, estiver corrompido ou tiver outro tamanho.</summary>
+    public static PeakData? TryLoad(string path, int buckets)
+    {
+        try
+        {
+            if (!File.Exists(path)) return null;
+            using var reader = new BinaryReader(File.OpenRead(path));
+            if (reader.ReadInt32() != FileMagic || reader.ReadInt32() != buckets) return null;
+            var data = new PeakData(buckets);
+            for (int i = 0; i < buckets; i++)
+            {
+                data.Min[i] = reader.ReadSingle();
+                data.Max[i] = reader.ReadSingle();
+            }
+            data._filled = buckets;
+            return data;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
     /// <summary>Varre o arquivo inteiro com um decodificador próprio, sem tocar na reprodução.</summary>
     public static PeakData Build(string path, int buckets, CancellationToken cancel, out Task completion)
     {

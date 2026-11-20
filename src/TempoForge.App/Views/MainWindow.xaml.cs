@@ -1,9 +1,15 @@
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using TempoForge.App.ViewModels;
 using TempoForge.Core.Decoding;
+using TempoForge.Core.Library;
+using TempoForge.Core.Persistence;
 
 namespace TempoForge.App.Views;
 
@@ -16,6 +22,7 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         DataContext = _vm;
+        RestoreWindowPlacement();
 
         Waveform.SeekRequested += _vm.Seek;
         Waveform.LoopPointMoved += _vm.MoveLoopPoint;
@@ -29,8 +36,21 @@ public partial class MainWindow : Window
         };
         _timer.Start();
 
+        Loaded += (_, _) => OpenInitialFile();
+    }
+
+    /// <summary>Abre o arquivo passado na linha de comando ou, na falta dele, o último usado (pausado).</summary>
+    private void OpenInitialFile()
+    {
         string[] args = Environment.GetCommandLineArgs();
-        if (args.Length > 1) Loaded += (_, _) => TryOpen(args[1]);
+        if (args.Length > 1)
+        {
+            TryOpen(args[1]);
+            return;
+        }
+
+        string? last = _vm.Settings.LastFile;
+        if (last != null && File.Exists(last)) TryOpen(last, autoPlay: false, quiet: true);
     }
 
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
@@ -38,10 +58,14 @@ public partial class MainWindow : Window
         if (e.PropertyName == nameof(MainViewModel.IsPlaying))
             PlayButton.Content = _vm.IsPlaying ? "Pausar" : "Tocar";
         else if (e.PropertyName == nameof(MainViewModel.IsLooping))
-            LoopToggle.Background = (System.Windows.Media.Brush)FindResource(_vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
+            LoopToggle.Background = (Brush)FindResource(_vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
     }
 
-    private void OnOpenClick(object sender, RoutedEventArgs e)
+    // ---- Abrir arquivos ----
+
+    private void OnOpenClick(object sender, RoutedEventArgs e) => ShowOpenDialog();
+
+    private void ShowOpenDialog()
     {
         string patterns = string.Join(";", AudioDecoder.SupportedExtensions.Select(x => "*" + x));
         var dialog = new OpenFileDialog
@@ -52,18 +76,77 @@ public partial class MainWindow : Window
         if (dialog.ShowDialog(this) == true) TryOpen(dialog.FileName);
     }
 
-    private void TryOpen(string path)
+    private void TryOpen(string path, bool autoPlay = true, bool quiet = false)
     {
+        if (!File.Exists(path))
+        {
+            _vm.ForgetRecent(path);
+            if (!quiet)
+                MessageBox.Show(this, $"Este arquivo não existe mais:\n\n{path}", "TempoForge",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
         try
         {
-            _vm.OpenFile(path);
+            _vm.OpenFile(path, autoPlay);
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, $"Não foi possível abrir este arquivo.\n\n{ex.Message}", "TempoForge",
-                MessageBoxButton.OK, MessageBoxImage.Warning);
+            if (!quiet)
+                MessageBox.Show(this, $"Não foi possível abrir este arquivo.\n\n{ex.Message}", "TempoForge",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
+
+    private void OnFileListDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is ListBox { SelectedItem: LibraryItem item }) TryOpen(item.Path);
+    }
+
+    private void OnFileListKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && sender is ListBox { SelectedItem: LibraryItem item })
+        {
+            TryOpen(item.Path);
+            e.Handled = true;
+        }
+    }
+
+    private void OnAddFolderClick(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog { Title = "Escolha uma pasta de músicas" };
+        if (dialog.ShowDialog(this) == true) _vm.AddLibraryFolder(dialog.FolderName);
+    }
+
+    // ---- Arrastar e soltar ----
+
+    private static string[] DroppedPaths(DragEventArgs e) =>
+        e.Data.GetData(DataFormats.FileDrop) as string[] ?? [];
+
+    private void OnDragEnter(object sender, DragEventArgs e)
+    {
+        bool usable = DroppedPaths(e).Any(p => Directory.Exists(p) || AudioDecoder.IsSupported(p));
+        e.Effects = usable ? DragDropEffects.Copy : DragDropEffects.None;
+        DropHint.Visibility = usable ? Visibility.Visible : Visibility.Collapsed;
+        e.Handled = true;
+    }
+
+    private void OnDragLeave(object sender, DragEventArgs e) => DropHint.Visibility = Visibility.Collapsed;
+
+    private void OnDrop(object sender, DragEventArgs e)
+    {
+        DropHint.Visibility = Visibility.Collapsed;
+        string[] paths = DroppedPaths(e);
+
+        // Pastas soltas entram na biblioteca; o primeiro arquivo de áudio solto é aberto.
+        foreach (string folder in paths.Where(Directory.Exists)) _vm.AddLibraryFolder(folder);
+        string? file = paths.FirstOrDefault(p => File.Exists(p) && AudioDecoder.IsSupported(p));
+        if (file != null) TryOpen(file);
+        else if (paths.Any(Directory.Exists)) LibraryTab.IsChecked = true;
+    }
+
+    // ---- Exportar ----
 
     private void OnExportClick(object sender, RoutedEventArgs e) => ShowExportDialog();
 
@@ -78,10 +161,46 @@ public partial class MainWindow : Window
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(5);
 
+    // ---- Janela ----
+
+    private void RestoreWindowPlacement()
+    {
+        AppSettings s = _vm.Settings;
+        Width = Math.Max(MinWidth, s.WindowWidth);
+        Height = Math.Max(MinHeight, s.WindowHeight);
+
+        if (s.WindowLeft is double left && s.WindowTop is double top
+            && left >= SystemParameters.VirtualScreenLeft - 50
+            && top >= SystemParameters.VirtualScreenTop - 50
+            && left < SystemParameters.VirtualScreenLeft + SystemParameters.VirtualScreenWidth - 100
+            && top < SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight - 100)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual;
+            Left = left;
+            Top = top;
+        }
+        if (s.WindowMaximized) WindowState = WindowState.Maximized;
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        AppSettings s = _vm.Settings;
+        s.WindowMaximized = WindowState == WindowState.Maximized;
+        Rect bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
+        if (!bounds.IsEmpty)
+        {
+            s.WindowLeft = bounds.Left;
+            s.WindowTop = bounds.Top;
+            s.WindowWidth = bounds.Width;
+            s.WindowHeight = bounds.Height;
+        }
+        base.OnClosing(e);
+    }
+
     protected override void OnClosed(EventArgs e)
     {
         _timer.Stop();
-        _vm.Dispose();
+        _vm.Dispose(); // grava os ajustes
         base.OnClosed(e);
     }
 }
