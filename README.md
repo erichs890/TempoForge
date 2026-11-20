@@ -35,6 +35,23 @@ Requer Windows 10 ou 11 de 64 bits.
 
 Os ajustes ficam em `%AppData%\TempoForge`.
 
+## Atualização automática
+
+Ao abrir, a cópia instalada consulta a última release em
+`github.com/erichs890/TempoForge` (espera no máximo 4 s). Se houver um instalador com
+versão maior, ela o baixa, confere o tamanho e o SHA-256 informados pelo GitHub, roda o
+instalador em modo silencioso e reabre o app já atualizado. Sem internet, ou se algo
+falhar, o app abre normalmente. O botão "Abrir sem atualizar" pula a verificação, e a
+variável de ambiente `TEMPOFORGE_NO_UPDATE` a desliga.
+
+Para publicar uma versão nova:
+
+1. Aumente `<Version>` em `Directory.Build.props`.
+2. Rode `.\tools\build-release.ps1`.
+3. Crie uma release no GitHub e anexe `installer\Output\TempoForge-<versão>-setup.exe`,
+   sem renomear: a versão é lida do nome do arquivo. Releases marcadas como rascunho ou
+   pré-lançamento são ignoradas.
+
 ## Como compilar
 
 Dependências:

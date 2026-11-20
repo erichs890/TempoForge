@@ -1,0 +1,13 @@
+<Window x:Class="TempoForge.App.Views.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TempoForge" Width="380" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource AppWindow}">
+    <StackPanel Margin="22">
+        <TextBlock x:Name="Status" Text="Verificando atualizações…" TextWrapping="Wrap" />
+        <ProgressBar x:Name="Progress" Margin="0,14,0,0" Minimum="0" Maximum="1" IsIndeterminate="True" />
+        <Button x:Name="SkipButton" Content="Abrir sem atualizar" HorizontalAlignment="Right" MinWidth="150"
+                Margin="0,16,0,0" Click="OnSkipClick" />
+    </StackPanel>
+</Window>
