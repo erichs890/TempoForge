@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{873A332F-9CFE-46DD-ACC5-3C7E700C3EF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempoForge.Native", "src\TempoForge.Native\TempoForge.Native.csproj", "{AA5288D3-3406-4AF4-A891-9DB3F679EAEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempoForge.Core", "src\TempoForge.Core\TempoForge.Core.csproj", "{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempoForge.App", "src\TempoForge.App\TempoForge.App.csproj", "{945C86EC-BC5C-432D-8EBC-C59FB418C803}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{44A4698A-F03C-4E86-A91C-F177C59D599F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TempoForge.Tests", "tests\TempoForge.Tests\TempoForge.Tests.csproj", "{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA5288D3-3406-4AF4-A891-9DB3F679EAEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA5288D3-3406-4AF4-A891-9DB3F679EAEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA5288D3-3406-4AF4-A891-9DB3F679EAEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA5288D3-3406-4AF4-A891-9DB3F679EAEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260}.Release|Any CPU.Build.0 = Release|Any CPU
+		{945C86EC-BC5C-432D-8EBC-C59FB418C803}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{945C86EC-BC5C-432D-8EBC-C59FB418C803}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{945C86EC-BC5C-432D-8EBC-C59FB418C803}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{945C86EC-BC5C-432D-8EBC-C59FB418C803}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AA5288D3-3406-4AF4-A891-9DB3F679EAEC} = {873A332F-9CFE-46DD-ACC5-3C7E700C3EF5}
+		{EC9432B9-A3F8-4709-A9A4-9BA5CEF2A260} = {873A332F-9CFE-46DD-ACC5-3C7E700C3EF5}
+		{945C86EC-BC5C-432D-8EBC-C59FB418C803} = {873A332F-9CFE-46DD-ACC5-3C7E700C3EF5}
+		{3EC067A6-6B3A-4C18-8D82-FE0EC15A6398} = {44A4698A-F03C-4E86-A91C-F177C59D599F}
+	EndGlobalSection
+EndGlobal
