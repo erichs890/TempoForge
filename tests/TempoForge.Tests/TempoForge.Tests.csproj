@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- net8.0-windows + WPF: os testes também exercitam o ViewModel e o mapa de atalhos do app. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
     <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -11,8 +13,10 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TempoForge.Core\TempoForge.Core.csproj" />
+    <ProjectReference Include="..\..\src\TempoForge.App\TempoForge.App.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Using Include="System.IO" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
+using TempoForge.App.Input;
 using TempoForge.App.ViewModels;
 using TempoForge.Core.Decoding;
 using TempoForge.Core.Library;
@@ -160,6 +161,43 @@ public partial class MainWindow : Window
     private void OnBackClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(-5);
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(5);
+
+    // ---- Atalhos de teclado ----
+
+    /// <summary>Enquanto se digita no filtro ou se navega numa lista, as teclas pertencem a esse controle.</summary>
+    private static bool FocusIsTyping => Keyboard.FocusedElement is TextBox;
+    private static bool FocusIsList => Keyboard.FocusedElement is ListBoxItem or ListBox;
+
+    protected override void OnPreviewKeyDown(KeyEventArgs e)
+    {
+        base.OnPreviewKeyDown(e);
+        ModifierKeys modifiers = Keyboard.Modifiers;
+        Key key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (modifiers == ModifierKeys.Control && key == Key.O) { ShowOpenDialog(); e.Handled = true; return; }
+        if (modifiers == ModifierKeys.Control && key == Key.E) { ShowExportDialog(); e.Handled = true; return; }
+        if (key == Key.F1) { ShowShortcutHelp(); e.Handled = true; return; }
+        if (key == Key.Escape) { Keyboard.ClearFocus(); FocusManager.SetFocusedElement(this, this); return; }
+
+        if (FocusIsTyping) return;
+        if (FocusIsList && key is Key.Up or Key.Down or Key.Home or Key.End or Key.Enter) return;
+
+        if (Shortcuts.HandleKey(_vm, key, modifiers)) e.Handled = true;
+    }
+
+    protected override void OnPreviewTextInput(TextCompositionEventArgs e)
+    {
+        base.OnPreviewTextInput(e);
+        if (FocusIsTyping || string.IsNullOrEmpty(e.Text)) return;
+        if (Shortcuts.HandleText(_vm, e.Text)) e.Handled = true;
+    }
+
+    private void OnHelpClick(object sender, RoutedEventArgs e) => ShowShortcutHelp();
+
+    private void ShowShortcutHelp()
+    {
+        new ShortcutsDialog { Owner = this }.ShowDialog();
+    }
 
     // ---- Janela ----
 
