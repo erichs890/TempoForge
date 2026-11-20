@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Atalhos de teclado" Width="420" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Background="{StaticResource BgBrush}" UseLayoutRounding="True">
+        Style="{StaticResource AppWindow}">
     <StackPanel Margin="22">
         <ItemsControl x:Name="List">
             <ItemsControl.ItemTemplate>

@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using TempoForge.App.Input;
+using TempoForge.App.Themes;
 using TempoForge.App.ViewModels;
 using TempoForge.Core.Decoding;
 using TempoForge.Core.Library;
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowTheme.UseDarkTitleBar(this);
         DataContext = _vm;
         RestoreWindowPlacement();
 
@@ -57,9 +59,14 @@ public partial class MainWindow : Window
     private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MainViewModel.IsPlaying))
-            PlayButton.Content = _vm.IsPlaying ? "Pausar" : "Tocar";
+            PlayButton.Content = _vm.IsPlaying ? "" : ""; // ícones de pausar / tocar
         else if (e.PropertyName == nameof(MainViewModel.IsLooping))
+        {
             LoopToggle.Background = (Brush)FindResource(_vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
+            LoopToggle.Foreground = (Brush)FindResource(_vm.IsLooping ? "OnAccentBrush" : "TextBrush");
+        }
+        else if (e.PropertyName == nameof(MainViewModel.IsLoaded))
+            EmptyState.Visibility = _vm.IsLoaded ? Visibility.Collapsed : Visibility.Visible;
     }
 
     // ---- Abrir arquivos ----

@@ -3,17 +3,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Exportar áudio" Width="440" SizeToContent="Height" ResizeMode="NoResize"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Background="{StaticResource BgBrush}" UseLayoutRounding="True">
+        Style="{StaticResource AppWindow}">
     <StackPanel Margin="22">
         <TextBlock x:Name="Summary" TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" Margin="0,0,0,16" />
 
         <TextBlock Text="Formato" FontWeight="SemiBold" Margin="0,0,0,6" />
         <StackPanel x:Name="OptionsPanel">
             <StackPanel Orientation="Horizontal">
-                <RadioButton x:Name="WavOption" Content="WAV (16 bits, sem perdas)" IsChecked="True"
-                             Foreground="{StaticResource TextBrush}" Checked="OnFormatChanged" />
-                <RadioButton x:Name="Mp3Option" Content="MP3" Margin="20,0,0,0"
-                             Foreground="{StaticResource TextBrush}" Checked="OnFormatChanged" />
+                <RadioButton x:Name="WavOption" Content="WAV (16 bits, sem perdas)" IsChecked="True" Checked="OnFormatChanged" />
+                <RadioButton x:Name="Mp3Option" Content="MP3" Margin="20,0,0,0" Checked="OnFormatChanged" />
             </StackPanel>
 
             <StackPanel x:Name="BitratePanel" Orientation="Horizontal" Margin="0,12,0,0" IsEnabled="False">
@@ -21,12 +19,10 @@
                 <ComboBox x:Name="BitrateBox" Width="110" />
             </StackPanel>
 
-            <CheckBox x:Name="RangeOnly" Content="Exportar só o trecho A-B" Margin="0,14,0,0"
-                      Foreground="{StaticResource TextBrush}" />
+            <CheckBox x:Name="RangeOnly" Content="Exportar só o trecho A-B" Margin="0,16,0,0" FontWeight="Normal" />
         </StackPanel>
 
-        <ProgressBar x:Name="Progress" Height="6" Margin="0,20,0,0" Minimum="0" Maximum="1" Visibility="Hidden"
-                     Foreground="{StaticResource AccentBrush}" Background="{StaticResource SurfaceHighBrush}" BorderThickness="0" />
+        <ProgressBar x:Name="Progress" Margin="0,20,0,0" Minimum="0" Maximum="1" Visibility="Hidden" />
         <TextBlock x:Name="Status" Margin="0,8,0,0" Foreground="{StaticResource TextDimBrush}" TextWrapping="Wrap" />
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">

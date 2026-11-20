@@ -180,8 +180,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         get
         {
             if (double.IsNaN(LoopA)) return "Sem loop";
-            if (double.IsNaN(LoopB)) return $"A {FormatTimePrecise(LoopA)}  —  B não definido";
-            return $"A {FormatTimePrecise(LoopA)}  —  B {FormatTimePrecise(LoopB)}  ({LoopB - LoopA:0.00} s)";
+            if (double.IsNaN(LoopB)) return $"A em {FormatTimePrecise(LoopA)}";
+            return $"{FormatTimePrecise(LoopA)} – {FormatTimePrecise(LoopB)}  ({LoopB - LoopA:0.0} s)";
         }
     }
 
@@ -300,7 +300,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
         int minutes = (int)(seconds / 60);
-        return $"{minutes}:{seconds - minutes * 60:00.00}";
+        return $"{minutes}:{seconds - minutes * 60:00.0}";
     }
 
     /// <summary>Abre um arquivo. Lança exceção com mensagem legível se o formato não puder ser lido.</summary>

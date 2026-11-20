@@ -2,21 +2,29 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:TempoForge.App.Controls"
-        Title="TempoForge" Width="1320" Height="780" MinWidth="1180" MinHeight="660"
+        Title="TempoForge" Icon="/Assets/app.ico" Width="1320" Height="780" MinWidth="1180" MinHeight="660"
         AllowDrop="True" DragEnter="OnDragEnter" DragLeave="OnDragLeave" Drop="OnDrop"
-        Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen"
-        UseLayoutRounding="True">
+        Style="{StaticResource AppWindow}" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Barra lateral: recentes e biblioteca -->
-        <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}">
-            <DockPanel Margin="14,18,14,14">
-                <TextBlock DockPanel.Dock="Top" Text="TempoForge" FontSize="17" FontWeight="Bold"
-                           Foreground="{StaticResource AccentBrush}" Margin="4,0,0,14" />
+        <!-- ================= Barra lateral: recentes e biblioteca ================= -->
+        <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource OutlineBrush}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="14,18,10,14">
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,0,0,16">
+                    <!-- Marca: três barras em brasa, como uma onda sobre a bigorna -->
+                    <Canvas Width="22" Height="22" VerticalAlignment="Center">
+                        <Rectangle Canvas.Left="1" Canvas.Top="9" Width="4" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
+                        <Rectangle Canvas.Left="9" Canvas.Top="2" Width="4" Height="17" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
+                        <Rectangle Canvas.Left="17" Canvas.Top="6" Width="4" Height="13" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
+                    </Canvas>
+                    <TextBlock Text="TempoForge" FontFamily="{StaticResource DisplayFont}" FontSize="18" FontWeight="Bold"
+                               Margin="9,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
                     <RadioButton x:Name="RecentsTab" Content="Recentes" IsChecked="True" GroupName="Side"
@@ -28,9 +36,9 @@
                 <!-- Recentes -->
                 <Grid Visibility="{Binding IsChecked, ElementName=RecentsTab, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Os arquivos que você abrir aparecem aqui. Também dá para arrastar um arquivo para a janela."
-                               TextWrapping="Wrap" Foreground="{StaticResource TextDimBrush}" Margin="4,6,4,0">
+                               TextWrapping="Wrap" Margin="4,6,8,0">
                         <TextBlock.Style>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
                                 <Setter Property="Visibility" Value="Collapsed" />
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Recents.Count}" Value="0">
@@ -46,250 +54,303 @@
 
                 <!-- Biblioteca -->
                 <DockPanel Visibility="{Binding IsChecked, ElementName=LibraryTab, Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <Button DockPanel.Dock="Right" Content="+ Pasta" Click="OnAddFolderClick" Padding="10,5" Margin="6,0,0,0"
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,4,8">
+                        <Button DockPanel.Dock="Right" Content="+ Pasta" Click="OnAddFolderClick" Padding="10,6" Margin="6,0,0,0"
                                 ToolTip="Adicionar uma pasta de músicas" />
                         <TextBox Text="{Binding LibraryFilter, UpdateSourceTrigger=PropertyChanged}"
                                  Style="{StaticResource SearchBox}" ToolTip="Filtrar por nome" />
                     </DockPanel>
-                    <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding LibraryFolders}" Margin="0,8,0,0">
+                    <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding LibraryFolders}" Margin="0,8,4,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel Margin="0,2">
-                                    <Button DockPanel.Dock="Right" Content="✕" Padding="6,1" FontSize="10"
+                                    <Button DockPanel.Dock="Right" Content="&#xE711;" FontFamily="{StaticResource IconFont}"
+                                            FontSize="9" Padding="6,4" Style="{StaticResource GhostButton}"
                                             ToolTip="Remover esta pasta da biblioteca (não apaga arquivos)"
                                             Command="{Binding DataContext.RemoveLibraryFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}" />
-                                    <TextBlock Text="{Binding}" FontSize="11" Foreground="{StaticResource TextDimBrush}"
-                                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip="{Binding}" />
+                                    <TextBlock Text="{Binding}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" ToolTip="{Binding}" />
                                 </DockPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding LibraryStatus}" FontSize="11" TextWrapping="Wrap"
-                               Foreground="{StaticResource TextDimBrush}" Margin="4,8,0,0" />
+                    <TextBlock DockPanel.Dock="Bottom" Text="{Binding LibraryStatus}" Style="{StaticResource Caption}"
+                               TextWrapping="Wrap" Margin="4,8,4,0" />
                     <ListBox ItemsSource="{Binding LibraryItems}" Style="{StaticResource FileList}"
                              MouseDoubleClick="OnFileListDoubleClick" KeyDown="OnFileListKeyDown" />
                 </DockPanel>
             </DockPanel>
         </Border>
 
-    <Grid Grid.Column="1" Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <!-- ================= Área principal ================= -->
+        <Grid Grid.Column="1" Margin="22,18,22,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="0,0,0,16">
-            <Button DockPanel.Dock="Right" Content="Atalhos" Click="OnHelpClick" Margin="8,0,0,0"
-                    ToolTip="Ver os atalhos de teclado  (F1)" />
-            <Button DockPanel.Dock="Right" Content="Exportar…" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
-                    Margin="8,0,0,0" ToolTip="Salvar o áudio com os ajustes atuais  (Ctrl+E)" />
-            <Button DockPanel.Dock="Right" Content="Abrir arquivo…" Click="OnOpenClick" ToolTip="Ctrl+O" />
-            <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold"
-                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        </DockPanel>
+            <!-- Título e ações -->
+            <DockPanel Grid.Row="0" Margin="0,0,0,14">
+                <Button DockPanel.Dock="Right" Content="Atalhos" Click="OnHelpClick" Margin="8,0,0,0"
+                        Style="{StaticResource GhostButton}" ToolTip="Ver os atalhos de teclado  (F1)" />
+                <Button DockPanel.Dock="Right" Content="Exportar…" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
+                        Margin="8,0,0,0" ToolTip="Salvar o áudio com os ajustes atuais  (Ctrl+E)" />
+                <Button DockPanel.Dock="Right" Content="Abrir arquivo…" Click="OnOpenClick" ToolTip="Ctrl+O" />
+                <TextBlock Text="{Binding Title}" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
+            </DockPanel>
 
-        <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="12" ClipToBounds="True">
-            <c:WaveformView x:Name="Waveform"
-                            Peaks="{Binding Peaks}" Position="{Binding Position}" Duration="{Binding Duration}"
-                            LoopA="{Binding LoopA}" LoopB="{Binding LoopB}" IsLooping="{Binding IsLooping}"
-                            Markers="{Binding Markers}"
-                            WaveBrush="{StaticResource SurfaceHighBrush}" PlayedBrush="{StaticResource AccentBrush}"
-                            LoopBrush="{StaticResource LoopBrush}" MarkerBrush="{StaticResource MarkerBrush}"
-                            Cursor="IBeam" />
-        </Border>
-
-        <DockPanel Grid.Row="2" Margin="2,8,2,0">
-            <TextBlock DockPanel.Dock="Right" Text="{Binding DurationText}" Foreground="{StaticResource TextDimBrush}" />
-            <TextBlock Text="{Binding PositionText}" />
-        </DockPanel>
-
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,12,0,0">
-            <Button Content="−5 s" Click="OnBackClick" IsEnabled="{Binding IsLoaded}" Margin="0,0,8,0" />
-            <Button x:Name="PlayButton" Style="{StaticResource AccentButton}" MinWidth="110"
-                    Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsLoaded}" Content="Tocar" />
-            <Button Content="+5 s" Click="OnForwardClick" IsEnabled="{Binding IsLoaded}" Margin="8,0,0,0" />
-        </StackPanel>
-
-        <DockPanel Grid.Row="4" Margin="0,14,0,0" IsEnabled="{Binding IsLoaded}">
-            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
-                <Button Content="A" Command="{Binding SetLoopACommand}" ToolTip="Marcar início do loop aqui  ( [ )" Padding="12,5" />
-                <Button Content="B" Command="{Binding SetLoopBCommand}" ToolTip="Marcar fim do loop aqui  ( ] )" Padding="12,5" Margin="6,0,0,0" />
-                <Button x:Name="LoopToggle" Content="Loop" Command="{Binding ToggleLoopCommand}" ToolTip="Ligar ou desligar a repetição  ( \ )" Padding="12,5" Margin="6,0,0,0" />
-                <Button Content="Limpar" Command="{Binding ClearLoopCommand}" Padding="12,5" Margin="6,0,0,0" />
-                <TextBlock Text="{Binding LoopText}" Foreground="{StaticResource TextDimBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
-            </StackPanel>
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
-                <ItemsControl ItemsSource="{Binding Markers}" VerticalAlignment="Center">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding Name}" Padding="8,4" Margin="0,0,4,0" FontSize="11"
-                                    Foreground="{StaticResource MarkerBrush}"
-                                    Command="{Binding DataContext.JumpToMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}"
-                                    ToolTip="Clique para ir até aqui; botão direito para remover">
-                                <Button.InputBindings>
-                                    <MouseBinding MouseAction="RightClick"
-                                                  Command="{Binding DataContext.RemoveMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  CommandParameter="{Binding}" />
-                                </Button.InputBindings>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-                <Button Content="◀" Command="{Binding PreviousMarkerCommand}" ToolTip="Marcador anterior  ( , )" Padding="10,5" />
-                <Button Content="+ Marcador" Command="{Binding AddMarkerCommand}" ToolTip="Adicionar marcador aqui  ( M )" Padding="12,5" Margin="6,0,0,0" />
-                <Button Content="▶" Command="{Binding NextMarkerCommand}" ToolTip="Próximo marcador  ( . )" Padding="10,5" Margin="6,0,0,0" />
-            </StackPanel>
-        </DockPanel>
-
-        <Border Grid.Row="5" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12" Margin="0,16,0,0">
-            <StackPanel>
+            <!-- Forma de onda -->
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12" ClipToBounds="True">
                 <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="70" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Velocidade" VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" />
-                    <Button Grid.Column="1" Content="−" Command="{Binding SpeedDownCommand}" Padding="10,4" />
-                    <Slider Grid.Column="2" Minimum="-2" Maximum="2" Value="{Binding SpeedSlider}"
-                            Margin="10,0" VerticalAlignment="Center" Focusable="False"
-                            IsMoveToPointEnabled="True" />
-                    <Button Grid.Column="3" Content="+" Command="{Binding SpeedUpCommand}" Padding="10,4" />
-                    <TextBlock Grid.Column="4" Text="{Binding SpeedText}" FontWeight="SemiBold"
-                               HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    <Button Grid.Column="5" Content="Normal" Command="{Binding SpeedResetCommand}" Margin="10,0,0,0" Padding="10,4" />
-                </Grid>
-
-                <Grid Margin="0,10,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="110" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Tom" VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" />
-                    <Button Grid.Column="1" Content="−" Command="{Binding PitchDownCommand}" Padding="10,4" />
-                    <Slider Grid.Column="2" Minimum="-12" Maximum="12" Value="{Binding Semitones}"
-                            IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="1"
-                            Margin="10,0" VerticalAlignment="Center" Focusable="False" IsMoveToPointEnabled="True" />
-                    <Button Grid.Column="3" Content="+" Command="{Binding PitchUpCommand}" Padding="10,4" />
-                    <TextBlock Grid.Column="4" Text="Cents" Margin="16,0,0,0" VerticalAlignment="Center"
-                               Foreground="{StaticResource TextDimBrush}" />
-                    <Slider Grid.Column="5" Minimum="-50" Maximum="50" Value="{Binding Cents}"
-                            IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="5"
-                            Margin="10,0" VerticalAlignment="Center" Focusable="False" IsMoveToPointEnabled="True" />
-                    <TextBlock Grid.Column="6" Text="{Binding PitchText}" FontWeight="SemiBold"
-                               HorizontalAlignment="Right" VerticalAlignment="Center" />
-                    <Button Grid.Column="7" Content="Normal" Command="{Binding PitchResetCommand}" Margin="10,0,0,0" Padding="10,4" />
-                </Grid>
-            </StackPanel>
-        </Border>
-
-        <Grid Grid.Row="6" Margin="0,12,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <Border x:Name="EqualizerPanel" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12"
-                    DataContext="{Binding Equalizer}">
-                <DockPanel>
-                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                        <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsEnabled}" Content="Equalizador"
-                                  Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Focusable="False" />
-                        <Button DockPanel.Dock="Right" Content="Zerar" Command="{Binding ResetCommand}" Padding="10,4" Margin="8,0,0,0" />
-                        <ComboBox DockPanel.Dock="Right" Width="190" ItemsSource="{Binding Presets}"
-                                  SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Focusable="False" />
-                        <TextBlock />
-                    </DockPanel>
-
-                    <StackPanel DockPanel.Dock="Left" Width="64" Margin="0,0,12,0">
-                        <TextBlock Text="{Binding PreampText}" FontSize="11" HorizontalAlignment="Center" />
-                        <Slider Orientation="Vertical" Height="96" Minimum="-15" Maximum="15" Value="{Binding PreampDb}"
-                                TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center"
-                                Margin="0,4" Focusable="False" IsMoveToPointEnabled="True" />
-                        <TextBlock Text="Pré-amp" FontSize="11" Foreground="{StaticResource TextDimBrush}" HorizontalAlignment="Center" />
+                    <c:WaveformView x:Name="Waveform"
+                                    Peaks="{Binding Peaks}" Position="{Binding Position}" Duration="{Binding Duration}"
+                                    LoopA="{Binding LoopA}" LoopB="{Binding LoopB}" IsLooping="{Binding IsLooping}"
+                                    Markers="{Binding Markers}"
+                                    WaveBrush="{StaticResource WaveBrush}" PlayedBrush="{StaticResource AccentGradient}"
+                                    LoopBrush="{StaticResource LoopBrush}" MarkerBrush="{StaticResource MarkerBrush}"
+                                    Cursor="IBeam" />
+                    <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
+                        <TextBlock Text="Arraste uma música para cá" FontFamily="{StaticResource DisplayFont}" FontSize="20"
+                                   FontWeight="SemiBold" HorizontalAlignment="Center" />
+                        <TextBlock Text="ou use “Abrir arquivo…” (Ctrl+O). MP3, M4A, FLAC, WAV e OGG."
+                                   Foreground="{StaticResource TextDimBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
                     </StackPanel>
-
-                    <ItemsControl ItemsSource="{Binding Bands}" IsEnabled="{Binding IsEnabled}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <UniformGrid Rows="1" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding GainText}" FontSize="11" HorizontalAlignment="Center" />
-                                    <Slider Orientation="Vertical" Height="96" Minimum="-15" Maximum="15" Value="{Binding GainDb}"
-                                            TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center"
-                                            Margin="0,4" Focusable="False" IsMoveToPointEnabled="True" />
-                                    <TextBlock Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextDimBrush}"
-                                               HorizontalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </DockPanel>
+                </Grid>
             </Border>
 
-            <StackPanel x:Name="SidePanel" Grid.Column="1" Width="270" Margin="12,0,0,0">
-                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12"
-                        DataContext="{Binding VocalReducer}">
+            <!-- Transporte -->
+            <Grid Grid.Row="2" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="{Binding IsLoaded}">
+                    <TextBlock Text="{Binding PositionText}" Style="{StaticResource Readout}" FontSize="15" MinWidth="52"
+                               VerticalAlignment="Center" />
+                    <Button Content="A" Command="{Binding SetLoopACommand}" ToolTip="Marcar início do loop aqui  ( [ )"
+                            Padding="12,6" Margin="14,0,0,0" FontWeight="SemiBold" />
+                    <Button Content="B" Command="{Binding SetLoopBCommand}" ToolTip="Marcar fim do loop aqui  ( ] )"
+                            Padding="12,6" Margin="6,0,0,0" FontWeight="SemiBold" />
+                    <Button x:Name="LoopToggle" Command="{Binding ToggleLoopCommand}"
+                            ToolTip="Ligar ou desligar a repetição do trecho A-B  ( \ )" Padding="12,6" Margin="6,0,0,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8EE;" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            <TextBlock Text="Loop" Margin="6,0,0,0"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                        </StackPanel>
+                    </Button>
+                    <Button Content="Limpar" Command="{Binding ClearLoopCommand}" Padding="10,6" Margin="6,0,0,0"
+                            Style="{StaticResource GhostButton}" ToolTip="Apagar os pontos A e B" />
+                    <TextBlock Text="{Binding LoopText}" Style="{StaticResource Caption}" VerticalAlignment="Center"
+                               Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="18,0">
+                    <Button Content="−5 s" Click="OnBackClick" IsEnabled="{Binding IsLoaded}" VerticalAlignment="Center"
+                            ToolTip="Voltar 5 segundos  ( ← )" />
+                    <Button x:Name="PlayButton" Style="{StaticResource PlayButton}" Margin="14,4"
+                            Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsLoaded}" Content="&#xE768;"
+                            ToolTip="Tocar ou pausar  (Espaço)" />
+                    <Button Content="+5 s" Click="OnForwardClick" IsEnabled="{Binding IsLoaded}" VerticalAlignment="Center"
+                            ToolTip="Avançar 5 segundos  ( → )" />
+                </StackPanel>
+
+                <DockPanel Grid.Column="2" VerticalAlignment="Center" IsEnabled="{Binding IsLoaded}" LastChildFill="False">
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding DurationText}" Style="{StaticResource Readout}" FontSize="15"
+                               Foreground="{StaticResource TextDimBrush}" MinWidth="52" TextAlignment="Right"
+                               VerticalAlignment="Center" Margin="14,0,0,0" />
+                    <Button DockPanel.Dock="Right" Content="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                            Command="{Binding NextMarkerCommand}" ToolTip="Próximo marcador  ( . )" Padding="10,8" Margin="6,0,0,0" />
+                    <Button DockPanel.Dock="Right" Content="+ Marcador" Command="{Binding AddMarkerCommand}"
+                            ToolTip="Adicionar marcador aqui  ( M )" Padding="12,6" Margin="6,0,0,0" />
+                    <Button DockPanel.Dock="Right" Content="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="11"
+                            Command="{Binding PreviousMarkerCommand}" ToolTip="Marcador anterior  ( , )" Padding="10,8" Margin="6,0,0,0" />
+                    <ScrollViewer DockPanel.Dock="Right" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
+                                  MaxWidth="230" VerticalAlignment="Center">
+                        <ItemsControl ItemsSource="{Binding Markers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding Name}" Padding="8,4" Margin="0,0,4,0" FontSize="11"
+                                            FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource MarkerBrush}"
+                                            Command="{Binding DataContext.JumpToMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Clique para ir até aqui; botão direito para remover">
+                                        <Button.InputBindings>
+                                            <MouseBinding MouseAction="RightClick"
+                                                          Command="{Binding DataContext.RemoveMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}" />
+                                        </Button.InputBindings>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Grid>
+
+            <!-- Velocidade e tom -->
+            <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,12,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="28" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Normal" Command="{Binding SpeedResetCommand}"
+                                    Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" />
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding SpeedText}" Style="{StaticResource Readout}"
+                                       FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AccentHotBrush}"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="Velocidade" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="0,6,0,0">
+                            <Button DockPanel.Dock="Left" Content="−" Command="{Binding SpeedDownCommand}" Padding="11,3"
+                                    ToolTip="Mais devagar  ( − )" />
+                            <Button DockPanel.Dock="Right" Content="+" Command="{Binding SpeedUpCommand}" Padding="11,3"
+                                    ToolTip="Mais rápido  ( + )" />
+                            <Slider Minimum="-2" Maximum="2" Value="{Binding SpeedSlider}" Margin="10,0" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <DockPanel Margin="42,0,42,0">
+                            <TextBlock DockPanel.Dock="Right" Text="4×" Style="{StaticResource Caption}" />
+                            <TextBlock Text="0,25×" Style="{StaticResource Caption}" />
+                        </DockPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Normal" Command="{Binding PitchResetCommand}"
+                                    Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" />
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding PitchText}" Style="{StaticResource Readout}"
+                                       FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AccentHotBrush}"
+                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBlock Text="Tom" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <Grid Margin="0,6,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="−" Command="{Binding PitchDownCommand}" Padding="11,3"
+                                    ToolTip="Um semitom abaixo  ( ↓ )" />
+                            <Slider Grid.Column="1" Minimum="-12" Maximum="12" Value="{Binding Semitones}"
+                                    IsSnapToTickEnabled="True" TickFrequency="1" Margin="10,0" VerticalAlignment="Center" />
+                            <Button Grid.Column="2" Content="+" Command="{Binding PitchUpCommand}" Padding="11,3"
+                                    ToolTip="Um semitom acima  ( ↑ )" />
+                            <Slider Grid.Column="3" Minimum="-50" Maximum="50" Value="{Binding Cents}"
+                                    IsSnapToTickEnabled="True" TickFrequency="1" Margin="18,0,4,0" VerticalAlignment="Center"
+                                    ToolTip="Afinação fina, em cents  ( Ctrl + ↑ / ↓ )" />
+                        </Grid>
+                        <Grid Margin="42,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="3*" />
+                                <ColumnDefinition Width="42" />
+                                <ColumnDefinition Width="2*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="semitons (±12)" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="2" Text="cents (±50)" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Equalizador e redução de voz -->
+            <Grid Grid.Row="4" Margin="0,12,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="290" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource Card}" DataContext="{Binding Equalizer}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                            <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsEnabled}" Content="Equalizador" VerticalAlignment="Center" />
+                            <Button DockPanel.Dock="Right" Content="Zerar" Command="{Binding ResetCommand}"
+                                    Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" Margin="6,0,0,0" />
+                            <ComboBox DockPanel.Dock="Right" Width="200" ItemsSource="{Binding Presets}"
+                                      SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name"
+                                      ToolTip="Predefinições" />
+                            <TextBlock />
+                        </DockPanel>
+
+                        <StackPanel DockPanel.Dock="Left" Width="62" Margin="0,0,10,0">
+                            <TextBlock Text="{Binding PreampText}" Style="{StaticResource Readout}" FontSize="11" HorizontalAlignment="Center" />
+                            <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding PreampDb}"
+                                    TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4" />
+                            <TextBlock Text="Pré-amp" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <Border DockPanel.Dock="Left" Width="1" Background="{StaticResource OutlineBrush}" Margin="0,4,6,4" />
+
+                        <ItemsControl ItemsSource="{Binding Bands}" IsEnabled="{Binding IsEnabled}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding GainText}" Style="{StaticResource Readout}" FontSize="11"
+                                                   HorizontalAlignment="Center" />
+                                        <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding GainDb}"
+                                                TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4" />
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </DockPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="12,0,0,0" DataContext="{Binding VocalReducer}">
                     <StackPanel>
                         <CheckBox IsChecked="{Binding IsEnabled}" Content="Reduzir voz"
-                                  Foreground="{StaticResource TextBrush}" Focusable="False"
                                   ToolTip="Atenua o que está no centro do estéreo. Funciona melhor em gravações estéreo de estúdio." />
-                        <StackPanel IsEnabled="{Binding IsEnabled}" Margin="0,10,0,0">
+                        <StackPanel IsEnabled="{Binding IsEnabled}" Margin="0,12,0,0">
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Right" Text="{Binding AmountText}" FontSize="11" />
-                                <TextBlock Text="Intensidade" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding AmountText}" Style="{StaticResource Readout}" FontSize="11" />
+                                <TextBlock Text="Intensidade" Style="{StaticResource Caption}" />
                             </DockPanel>
-                            <Slider Minimum="0" Maximum="100" Value="{Binding Amount}" Margin="0,2,0,8"
-                                    Focusable="False" IsMoveToPointEnabled="True" />
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Amount}" Margin="0,0,0,6" />
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Right" Text="{Binding LowCutText}" FontSize="11" />
-                                <TextBlock Text="Preservar graves abaixo de" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding LowCutText}" Style="{StaticResource Readout}" FontSize="11" />
+                                <TextBlock Text="Preservar graves abaixo de" Style="{StaticResource Caption}" />
                             </DockPanel>
-                            <Slider Minimum="20" Maximum="400" Value="{Binding LowCut}" Margin="0,2,0,8"
-                                    TickFrequency="10" IsSnapToTickEnabled="True" Focusable="False" IsMoveToPointEnabled="True" />
+                            <Slider Minimum="20" Maximum="400" Value="{Binding LowCut}" Margin="0,0,0,6"
+                                    TickFrequency="10" IsSnapToTickEnabled="True" />
                             <DockPanel>
-                                <TextBlock DockPanel.Dock="Right" Text="{Binding HighCutText}" FontSize="11" />
-                                <TextBlock Text="Preservar agudos acima de" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding HighCutText}" Style="{StaticResource Readout}" FontSize="11" />
+                                <TextBlock Text="Preservar agudos acima de" Style="{StaticResource Caption}" />
                             </DockPanel>
-                            <Slider Minimum="1000" Maximum="16000" Value="{Binding HighCut}" Margin="0,2,0,0"
-                                    TickFrequency="500" IsSnapToTickEnabled="True" Focusable="False" IsMoveToPointEnabled="True" />
+                            <Slider Minimum="1000" Maximum="16000" Value="{Binding HighCut}"
+                                    TickFrequency="500" IsSnapToTickEnabled="True" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
-            </StackPanel>
+            </Grid>
         </Grid>
-    </Grid>
 
         <!-- Aviso mostrado enquanto um arquivo é arrastado sobre a janela -->
-        <Border x:Name="DropHint" Grid.ColumnSpan="2" Background="#CC14161B" Visibility="Collapsed" IsHitTestVisible="False">
-            <Border BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="14" Margin="24">
-                <TextBlock Text="Solte para abrir" FontSize="26" FontWeight="SemiBold"
+        <Border x:Name="DropHint" Grid.ColumnSpan="2" Background="#D90F1115" Visibility="Collapsed" IsHitTestVisible="False">
+            <Border BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="16" Margin="24">
+                <TextBlock Text="Solte para abrir" FontFamily="{StaticResource DisplayFont}" FontSize="28" FontWeight="SemiBold"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
         </Border>

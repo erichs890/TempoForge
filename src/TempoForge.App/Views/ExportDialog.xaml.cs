@@ -19,6 +19,7 @@ public partial class ExportDialog : Window
     public ExportDialog(ExportOptions template, string suggestedName, string summary)
     {
         InitializeComponent();
+        Themes.WindowTheme.UseDarkTitleBar(this);
         _template = template;
         _suggestedName = suggestedName;
         Summary.Text = summary;
