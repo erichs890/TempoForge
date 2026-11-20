@@ -64,7 +64,7 @@ public class DecoderTests
     [Trait("Category", "Device")]
     public void EnginePlaysSeeksAndReachesTheEnd()
     {
-        using TempWave wave = TempWave.Sine(3.0, 440);
+        using TempWave wave = TempWave.Sine(3.0, 440, amplitude: 0.001f);
         using var engine = new AudioEngine();
         engine.Open(wave.Path);
         Assert.InRange(engine.DurationSeconds, 2.99, 3.01);
@@ -87,6 +87,27 @@ public class DecoderTests
         Thread.Sleep(600);
         Assert.True(engine.HasEnded);
         Assert.False(engine.IsPlaying);
+        Assert.Equal(0, engine.UnderrunCount);
+    }
+
+    [Fact]
+    [Trait("Category", "Device")]
+    public void TempoScalesHowFastThePositionAdvances()
+    {
+        using TempWave wave = TempWave.Sine(8.0, 440, amplitude: 0.001f);
+        using var engine = new AudioEngine { Tempo = 2.0 };
+        engine.Open(wave.Path);
+        engine.Play();
+        Thread.Sleep(600);
+        double start = engine.PositionSeconds;
+        Thread.Sleep(1000);
+        Assert.InRange(engine.PositionSeconds - start, 1.8, 2.2);
+
+        engine.Tempo = 0.5;
+        Thread.Sleep(500);
+        start = engine.PositionSeconds;
+        Thread.Sleep(1000);
+        Assert.InRange(engine.PositionSeconds - start, 0.4, 0.6);
         Assert.Equal(0, engine.UnderrunCount);
     }
 }

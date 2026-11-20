@@ -40,6 +40,7 @@ public sealed class AudioEngine : IDisposable
 
     // UI → callback
     private volatile bool _playing;
+    private double _tempoTarget = 1.0;
 
     // callback → UI
     private long _positionFrames;
@@ -64,6 +65,14 @@ public sealed class AudioEngine : IDisposable
     public bool HasEnded => _ended;
 
     public int UnderrunCount => Volatile.Read(ref _underruns);
+
+    /// <summary>Velocidade de reprodução (1 = original), sem alterar o tom.</summary>
+    public double Tempo
+    {
+        get => Volatile.Read(ref _tempoTarget);
+        set => Volatile.Write(ref _tempoTarget,
+            Math.Clamp(value, RubberBandStretcher.MinTempo, RubberBandStretcher.MaxTempo));
+    }
 
     public void Open(string path)
     {
@@ -189,7 +198,7 @@ public sealed class AudioEngine : IDisposable
     private sealed class RenderSource : ISampleProvider, IDisposable
     {
         private readonly AudioEngine _engine;
-        private readonly ITimeStretcher _stretcher = new PassthroughStretcher();
+        private readonly ITimeStretcher _stretcher = new RubberBandStretcher();
         private readonly float[] _feed = new float[FeedBlockFrames * AudioFormat.Channels];
 
         private long _baseFrame;
@@ -237,6 +246,8 @@ public sealed class AudioEngine : IDisposable
             if (_prefilling && (e._endOfFile || e._ring.AvailableToRead >= PrefillFrames * AudioFormat.Channels))
                 _prefilling = false;
 
+            _stretcher.Tempo = Glide(_stretcher.Tempo, Volatile.Read(ref e._tempoTarget));
+
             bool playing = e._playing;
             if (_prefilling || (!playing && _gain <= 0f))
             {
@@ -252,6 +263,16 @@ public sealed class AudioEngine : IDisposable
             long position = _baseFrame + Math.Max(0, _consumedFrames - _stretcher.LatencyFrames);
             Volatile.Write(ref e._positionFrames, Math.Min(position, e.TotalFrames));
             return count;
+        }
+
+        /// <summary>
+        /// Aproxima o valor atual do alvo em passos por bloco (~30 ms no total), para que
+        /// arrastar um controle nunca cause salto audível.
+        /// </summary>
+        private static double Glide(double current, double target)
+        {
+            double next = current + (target - current) * 0.4;
+            return Math.Abs(target - next) < 1e-4 ? target : next;
         }
 
         private int Render(Span<float> output, int frames)

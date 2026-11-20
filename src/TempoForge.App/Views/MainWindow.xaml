@@ -11,6 +11,7 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,16">
@@ -37,5 +38,29 @@
                     Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsLoaded}" Content="Tocar" />
             <Button Content="+5 s" Click="OnForwardClick" IsEnabled="{Binding IsLoaded}" Margin="8,0,0,0" />
         </StackPanel>
+
+        <Border Grid.Row="4" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12" Margin="0,16,0,0">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="70" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Velocidade" VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" />
+                    <Button Grid.Column="1" Content="−" Command="{Binding SpeedDownCommand}" Padding="10,4" />
+                    <Slider Grid.Column="2" Minimum="-2" Maximum="2" Value="{Binding SpeedSlider}"
+                            Margin="10,0" VerticalAlignment="Center" Focusable="False"
+                            IsMoveToPointEnabled="True" />
+                    <Button Grid.Column="3" Content="+" Command="{Binding SpeedUpCommand}" Padding="10,4" />
+                    <TextBlock Grid.Column="4" Text="{Binding SpeedText}" FontWeight="SemiBold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    <Button Grid.Column="5" Content="Normal" Command="{Binding SpeedResetCommand}" Margin="10,0,0,0" Padding="10,4" />
+                </Grid>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

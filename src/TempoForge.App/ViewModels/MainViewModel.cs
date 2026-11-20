@@ -22,6 +22,42 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _durationText = "0:00";
     [ObservableProperty] private PeakData? _peaks;
 
+    public const double MinSpeed = 0.25, MaxSpeed = 4.0, SpeedStep = 0.05;
+
+    /// <summary>Velocidade em múltiplos do original (1,00 = normal).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SpeedText), nameof(SpeedSlider))]
+    private double _speed = 1.0;
+
+    public string SpeedText => $"{Speed:0.00}×";
+
+    /// <summary>Posição do controle deslizante: escala logarítmica, 0 = velocidade normal.</summary>
+    public double SpeedSlider
+    {
+        get => Math.Log2(Speed);
+        set => Speed = Math.Round(Math.Pow(2, value), 2);
+    }
+
+    partial void OnSpeedChanged(double value)
+    {
+        double clamped = Math.Clamp(value, MinSpeed, MaxSpeed);
+        if (clamped != value)
+        {
+            Speed = clamped;
+            return;
+        }
+        _engine.Tempo = value;
+    }
+
+    [RelayCommand]
+    private void SpeedUp() => Speed = Math.Round(Speed + SpeedStep, 2);
+
+    [RelayCommand]
+    private void SpeedDown() => Speed = Math.Round(Speed - SpeedStep, 2);
+
+    [RelayCommand]
+    private void SpeedReset() => Speed = 1.0;
+
     /// <summary>Abre um arquivo. Lança exceção com mensagem legível se o formato não puder ser lido.</summary>
     public void OpenFile(string path)
     {
