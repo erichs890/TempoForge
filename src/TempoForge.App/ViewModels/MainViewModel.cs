@@ -18,9 +18,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public MainViewModel()
     {
         Equalizer = new EqualizerViewModel(_engine.Effects);
+        VocalReducer = new VocalReducerViewModel(_engine.Effects);
     }
 
     public EqualizerViewModel Equalizer { get; }
+    public VocalReducerViewModel VocalReducer { get; }
 
     [ObservableProperty] private string _title = "Nenhum arquivo aberto";
     [ObservableProperty] private bool _isLoaded;

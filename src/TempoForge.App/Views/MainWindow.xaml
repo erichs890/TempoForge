@@ -180,7 +180,36 @@
                 </DockPanel>
             </Border>
 
-            <StackPanel x:Name="SidePanel" Grid.Column="1" Width="250" Margin="12,0,0,0" />
+            <StackPanel x:Name="SidePanel" Grid.Column="1" Width="270" Margin="12,0,0,0">
+                <Border Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12"
+                        DataContext="{Binding VocalReducer}">
+                    <StackPanel>
+                        <CheckBox IsChecked="{Binding IsEnabled}" Content="Reduzir voz"
+                                  Foreground="{StaticResource TextBrush}" Focusable="False"
+                                  ToolTip="Atenua o que está no centro do estéreo. Funciona melhor em gravações estéreo de estúdio." />
+                        <StackPanel IsEnabled="{Binding IsEnabled}" Margin="0,10,0,0">
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding AmountText}" FontSize="11" />
+                                <TextBlock Text="Intensidade" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                            </DockPanel>
+                            <Slider Minimum="0" Maximum="100" Value="{Binding Amount}" Margin="0,2,0,8"
+                                    Focusable="False" IsMoveToPointEnabled="True" />
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding LowCutText}" FontSize="11" />
+                                <TextBlock Text="Preservar graves abaixo de" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                            </DockPanel>
+                            <Slider Minimum="20" Maximum="400" Value="{Binding LowCut}" Margin="0,2,0,8"
+                                    TickFrequency="10" IsSnapToTickEnabled="True" Focusable="False" IsMoveToPointEnabled="True" />
+                            <DockPanel>
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding HighCutText}" FontSize="11" />
+                                <TextBlock Text="Preservar agudos acima de" FontSize="11" Foreground="{StaticResource TextDimBrush}" />
+                            </DockPanel>
+                            <Slider Minimum="1000" Maximum="16000" Value="{Binding HighCut}" Margin="0,2,0,0"
+                                    TickFrequency="500" IsSnapToTickEnabled="True" Focusable="False" IsMoveToPointEnabled="True" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>
