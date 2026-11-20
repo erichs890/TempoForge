@@ -1,0 +1,13 @@
+# Material de referência: nunca entra no repositório
+*.apk
+
+# Build
+bin/
+obj/
+publish/
+installer/Output/
+*.user
+.vs/
+
+# Ferramentas locais
+.tools/
