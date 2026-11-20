@@ -15,6 +15,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly AudioEngine _engine = new();
     private CancellationTokenSource? _peakCancel;
 
+    public MainViewModel()
+    {
+        Equalizer = new EqualizerViewModel(_engine.Effects);
+    }
+
+    public EqualizerViewModel Equalizer { get; }
+
     [ObservableProperty] private string _title = "Nenhum arquivo aberto";
     [ObservableProperty] private bool _isLoaded;
     [ObservableProperty] private bool _isPlaying;

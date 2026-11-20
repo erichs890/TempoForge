@@ -57,6 +57,9 @@ public sealed class AudioEngine : IDisposable
         _source = new RenderSource(this);
     }
 
+    /// <summary>Alvos do equalizador e dos demais efeitos; podem ser alterados a qualquer momento.</summary>
+    public EffectSettings Effects { get; } = new();
+
     public bool IsLoaded => _decoder != null;
     public bool IsPlaying => _playing;
     public string? FilePath => _decoder?.Path;
@@ -315,9 +318,12 @@ public sealed class AudioEngine : IDisposable
         private float _gain;
         private bool _prefilling;
 
+        private readonly EffectChain _effects;
+
         public RenderSource(AudioEngine engine)
         {
             _engine = engine;
+            _effects = new EffectChain(engine.Effects);
             WaveFormat = WaveFormat.CreateIeeeFloatWaveFormat(AudioFormat.SampleRate, AudioFormat.Channels);
         }
 
@@ -343,6 +349,7 @@ public sealed class AudioEngine : IDisposable
                 e._ring.DiscardAll();
                 e._jumps.DiscardAll();
                 _stretcher.Reset();
+                _effects.Reset();
                 _baseFrame = Volatile.Read(ref e._flushBaseFrame);
                 _consumedFrames = 0;
                 _drainFramesLeft = -1;
@@ -368,6 +375,7 @@ public sealed class AudioEngine : IDisposable
             int produced = Render(output, frames);
             if (produced < frames) output[(produced * AudioFormat.Channels)..].Clear();
 
+            _effects.Process(output);
             ApplyFade(output, frames, playing ? 1f : 0f);
 
             long played = Math.Max(0, _consumedFrames - _stretcher.LatencyFrames);

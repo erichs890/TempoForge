@@ -2,13 +2,14 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:c="clr-namespace:TempoForge.App.Controls"
-        Title="TempoForge" Width="980" Height="560" MinWidth="640" MinHeight="380"
+        Title="TempoForge" Width="1040" Height="760" MinWidth="900" MinHeight="640"
         Background="{StaticResource BgBrush}" WindowStartupLocation="CenterScreen"
         UseLayoutRounding="True">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -130,5 +131,56 @@
                 </Grid>
             </StackPanel>
         </Border>
+
+        <Grid Grid.Row="6" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <Border x:Name="EqualizerPanel" Background="{StaticResource SurfaceBrush}" CornerRadius="10" Padding="16,12"
+                    DataContext="{Binding Equalizer}">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsEnabled}" Content="Equalizador"
+                                  Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" Focusable="False" />
+                        <Button DockPanel.Dock="Right" Content="Zerar" Command="{Binding ResetCommand}" Padding="10,4" Margin="8,0,0,0" />
+                        <ComboBox DockPanel.Dock="Right" Width="190" ItemsSource="{Binding Presets}"
+                                  SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name" Focusable="False" />
+                        <TextBlock />
+                    </DockPanel>
+
+                    <StackPanel DockPanel.Dock="Left" Width="64" Margin="0,0,12,0">
+                        <TextBlock Text="{Binding PreampText}" FontSize="11" HorizontalAlignment="Center" />
+                        <Slider Orientation="Vertical" Height="96" Minimum="-15" Maximum="15" Value="{Binding PreampDb}"
+                                TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center"
+                                Margin="0,4" Focusable="False" IsMoveToPointEnabled="True" />
+                        <TextBlock Text="Pré-amp" FontSize="11" Foreground="{StaticResource TextDimBrush}" HorizontalAlignment="Center" />
+                    </StackPanel>
+
+                    <ItemsControl ItemsSource="{Binding Bands}" IsEnabled="{Binding IsEnabled}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Rows="1" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding GainText}" FontSize="11" HorizontalAlignment="Center" />
+                                    <Slider Orientation="Vertical" Height="96" Minimum="-15" Maximum="15" Value="{Binding GainDb}"
+                                            TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center"
+                                            Margin="0,4" Focusable="False" IsMoveToPointEnabled="True" />
+                                    <TextBlock Text="{Binding Label}" FontSize="11" Foreground="{StaticResource TextDimBrush}"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </Border>
+
+            <StackPanel x:Name="SidePanel" Grid.Column="1" Width="250" Margin="12,0,0,0" />
+        </Grid>
     </Grid>
 </Window>
