@@ -60,6 +60,33 @@
                                HorizontalAlignment="Right" VerticalAlignment="Center" />
                     <Button Grid.Column="5" Content="Normal" Command="{Binding SpeedResetCommand}" Margin="10,0,0,0" Padding="10,4" />
                 </Grid>
+
+                <Grid Margin="0,10,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Tom" VerticalAlignment="Center" Foreground="{StaticResource TextDimBrush}" />
+                    <Button Grid.Column="1" Content="−" Command="{Binding PitchDownCommand}" Padding="10,4" />
+                    <Slider Grid.Column="2" Minimum="-12" Maximum="12" Value="{Binding Semitones}"
+                            IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="1"
+                            Margin="10,0" VerticalAlignment="Center" Focusable="False" IsMoveToPointEnabled="True" />
+                    <Button Grid.Column="3" Content="+" Command="{Binding PitchUpCommand}" Padding="10,4" />
+                    <TextBlock Grid.Column="4" Text="Cents" Margin="16,0,0,0" VerticalAlignment="Center"
+                               Foreground="{StaticResource TextDimBrush}" />
+                    <Slider Grid.Column="5" Minimum="-50" Maximum="50" Value="{Binding Cents}"
+                            IsSnapToTickEnabled="True" TickFrequency="1" SmallChange="1" LargeChange="5"
+                            Margin="10,0" VerticalAlignment="Center" Focusable="False" IsMoveToPointEnabled="True" />
+                    <TextBlock Grid.Column="6" Text="{Binding PitchText}" FontWeight="SemiBold"
+                               HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    <Button Grid.Column="7" Content="Normal" Command="{Binding PitchResetCommand}" Margin="10,0,0,0" Padding="10,4" />
+                </Grid>
             </StackPanel>
         </Border>
     </Grid>

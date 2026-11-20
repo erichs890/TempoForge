@@ -58,6 +58,56 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void SpeedReset() => Speed = 1.0;
 
+    public const int MaxSemitones = 12, MaxCents = 50;
+
+    /// <summary>Transposição em semitons inteiros (−12 a +12).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PitchText))]
+    private int _semitones;
+
+    /// <summary>Afinação fina em cents (−50 a +50).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PitchText))]
+    private int _cents;
+
+    public string PitchText
+    {
+        get
+        {
+            string st = Semitones > 0 ? $"+{Semitones}" : Semitones.ToString();
+            return Cents == 0 ? $"{st} st" : $"{st} st {Cents:+0;−0} c";
+        }
+    }
+
+    partial void OnSemitonesChanged(int value)
+    {
+        int clamped = Math.Clamp(value, -MaxSemitones, MaxSemitones);
+        if (clamped != value) Semitones = clamped;
+        else ApplyPitch();
+    }
+
+    partial void OnCentsChanged(int value)
+    {
+        int clamped = Math.Clamp(value, -MaxCents, MaxCents);
+        if (clamped != value) Cents = clamped;
+        else ApplyPitch();
+    }
+
+    private void ApplyPitch() => _engine.PitchSemitones = Semitones + Cents / 100.0;
+
+    [RelayCommand]
+    private void PitchUp() => Semitones++;
+
+    [RelayCommand]
+    private void PitchDown() => Semitones--;
+
+    [RelayCommand]
+    private void PitchReset()
+    {
+        Semitones = 0;
+        Cents = 0;
+    }
+
     /// <summary>Abre um arquivo. Lança exceção com mensagem legível se o formato não puder ser lido.</summary>
     public void OpenFile(string path)
     {

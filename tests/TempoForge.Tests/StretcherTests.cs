@@ -29,6 +29,44 @@ public class StretcherTests
         Assert.InRange(frequency, 440 * Math.Pow(2, -5 / 1200.0), 440 * Math.Pow(2, 5 / 1200.0));
     }
 
+    [Theory]
+    [InlineData(12.0)]
+    [InlineData(7.0)]
+    [InlineData(1.0)]
+    [InlineData(0.5)]
+    [InlineData(-0.25)]
+    [InlineData(-5.0)]
+    [InlineData(-12.0)]
+    public void PitchShiftsFrequencyAndKeepsDuration(double semitones)
+    {
+        float[] input = StretchHarness.Sine(4.0, 440);
+        using var stretcher = new RubberBandStretcher { PitchScale = Math.Pow(2, semitones / 12) };
+
+        float[] output = StretchHarness.Run(stretcher, input);
+
+        double frames = output.Length / 2.0;
+        Assert.InRange(frames, 192_000 * 0.98, 192_000 * 1.02);
+
+        double expected = 440 * Math.Pow(2, semitones / 12);
+        double measured = StretchHarness.DominantFrequency(output, (int)(frames / 2) - 16384);
+        double errorCents = 1200 * Math.Log2(measured / expected);
+        Assert.InRange(errorCents, -5, 5);
+    }
+
+    [Fact]
+    public void TempoAndPitchCombineIndependently()
+    {
+        float[] input = StretchHarness.Sine(4.0, 440);
+        using var stretcher = new RubberBandStretcher { Tempo = 0.5, PitchScale = Math.Pow(2, 3 / 12.0) };
+
+        float[] output = StretchHarness.Run(stretcher, input);
+
+        double frames = output.Length / 2.0;
+        Assert.InRange(frames, 384_000 * 0.98, 384_000 * 1.02);
+        double measured = StretchHarness.DominantFrequency(output, (int)(frames / 2) - 16384);
+        Assert.InRange(1200 * Math.Log2(measured / (440 * Math.Pow(2, 3 / 12.0))), -5, 5);
+    }
+
     [Fact]
     public void SweepingTempoWhilePlayingProducesNoClicks()
     {

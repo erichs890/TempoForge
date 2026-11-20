@@ -41,6 +41,7 @@ public sealed class AudioEngine : IDisposable
     // UI → callback
     private volatile bool _playing;
     private double _tempoTarget = 1.0;
+    private double _pitchTarget = 1.0;
 
     // callback → UI
     private long _positionFrames;
@@ -72,6 +73,14 @@ public sealed class AudioEngine : IDisposable
         get => Volatile.Read(ref _tempoTarget);
         set => Volatile.Write(ref _tempoTarget,
             Math.Clamp(value, RubberBandStretcher.MinTempo, RubberBandStretcher.MaxTempo));
+    }
+
+    /// <summary>Altura em semitons (frações valem como cents), sem alterar a velocidade.</summary>
+    public double PitchSemitones
+    {
+        get => 12.0 * Math.Log2(Volatile.Read(ref _pitchTarget));
+        set => Volatile.Write(ref _pitchTarget, Math.Clamp(Math.Pow(2.0, value / 12.0),
+            RubberBandStretcher.MinPitchScale, RubberBandStretcher.MaxPitchScale));
     }
 
     public void Open(string path)
@@ -247,6 +256,7 @@ public sealed class AudioEngine : IDisposable
                 _prefilling = false;
 
             _stretcher.Tempo = Glide(_stretcher.Tempo, Volatile.Read(ref e._tempoTarget));
+            _stretcher.PitchScale = Glide(_stretcher.PitchScale, Volatile.Read(ref e._pitchTarget));
 
             bool playing = e._playing;
             if (_prefilling || (!playing && _gain <= 0f))
