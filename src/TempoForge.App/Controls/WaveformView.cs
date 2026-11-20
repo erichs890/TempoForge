@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using TempoForge.Core.Looping;
 using TempoForge.Core.Waveform;
 
@@ -134,9 +135,13 @@ public sealed class WaveformView : FrameworkElement
         dc.DrawText(text, new Point(x - text.Width / 2, h - 15));
     }
 
-    private Geometry? _wave;
+    // A onda é rasterizada uma única vez em dois bitmaps (não tocado / tocado); cada quadro
+    // só desenha as duas imagens recortadas, sem refazer a geometria de milhares de colunas.
+    private ImageSource? _waveImage, _playedImage;
+    private Brush? _waveImageBrush, _playedImageBrush;
     private int _waveFilled = -1;
-    private double _waveWidth = -1, _waveHeight = -1;
+    private double _waveWidth = -1, _waveHeight = -1, _waveDpi = -1;
+    private long _lastGrowRefresh;
 
     public PeakData? Peaks { get => (PeakData?)GetValue(PeaksProperty); set => SetValue(PeaksProperty, value); }
     public double Position { get => (double)GetValue(PositionProperty); set => SetValue(PositionProperty, value); }
@@ -150,7 +155,7 @@ public sealed class WaveformView : FrameworkElement
 
     private void InvalidateWave()
     {
-        _wave = null;
+        _waveImage = _playedImage = null;
         _waveFilled = -1;
         InvalidateVisual();
     }
@@ -166,22 +171,31 @@ public sealed class WaveformView : FrameworkElement
         if (peaks != null)
         {
             int filled = peaks.Filled;
-            if (_wave == null || filled != _waveFilled || w != _waveWidth || h != _waveHeight)
+            double dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            if (_waveImage == null || filled != _waveFilled || w != _waveWidth || h != _waveHeight
+                || dpi != _waveDpi || !ReferenceEquals(WaveBrush, _waveImageBrush)
+                || !ReferenceEquals(PlayedBrush, _playedImageBrush))
             {
-                _wave = BuildGeometry(peaks, filled, w, h);
+                Geometry wave = BuildGeometry(peaks, filled, w, h);
+                _waveImage = Rasterize(wave, WaveBrush, w, h, dpi);
+                _playedImage = Rasterize(wave, PlayedBrush, w, h, dpi);
+                _waveImageBrush = WaveBrush;
+                _playedImageBrush = PlayedBrush;
                 _waveFilled = filled;
                 _waveWidth = w;
                 _waveHeight = h;
+                _waveDpi = dpi;
             }
 
             double playedX = Duration > 0 ? Math.Clamp(Position / Duration, 0, 1) * w : 0;
+            var bounds = new Rect(0, 0, w, h);
 
             dc.PushClip(new RectangleGeometry(new Rect(playedX, 0, Math.Max(0, w - playedX), h)));
-            dc.DrawGeometry(WaveBrush, null, _wave);
+            dc.DrawImage(_waveImage, bounds);
             dc.Pop();
 
             dc.PushClip(new RectangleGeometry(new Rect(0, 0, playedX, h)));
-            dc.DrawGeometry(PlayedBrush, null, _wave);
+            dc.DrawImage(_playedImage, bounds);
             dc.Pop();
 
             DrawOverlays(dc, w, h);
@@ -189,6 +203,18 @@ public sealed class WaveformView : FrameworkElement
             if (Duration > 0)
                 dc.DrawRectangle(Brushes.White, null, new Rect(Math.Round(playedX) - 0.5, 0, 1.5, h));
         }
+    }
+
+    private static ImageSource Rasterize(Geometry wave, Brush brush, double w, double h, double dpi)
+    {
+        var visual = new DrawingVisual();
+        using (DrawingContext dc = visual.RenderOpen()) dc.DrawGeometry(brush, null, wave);
+        var bitmap = new RenderTargetBitmap(
+            Math.Max(1, (int)Math.Ceiling(w * dpi)), Math.Max(1, (int)Math.Ceiling(h * dpi)),
+            96 * dpi, 96 * dpi, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        bitmap.Freeze();
+        return bitmap;
     }
 
     private static Geometry BuildGeometry(PeakData peaks, int filled, double w, double h)
@@ -232,7 +258,12 @@ public sealed class WaveformView : FrameworkElement
     public void RefreshIfGrowing()
     {
         PeakData? peaks = Peaks;
-        if (peaks != null && peaks.Filled != _waveFilled) InvalidateVisual();
+        if (peaks == null || peaks.Filled == _waveFilled) return;
+        // Durante a varredura basta atualizar algumas vezes por segundo (e uma última vez ao terminar).
+        long now = Environment.TickCount64;
+        if (peaks.Filled < peaks.Buckets && now - _lastGrowRefresh < 200) return;
+        _lastGrowRefresh = now;
+        InvalidateVisual();
     }
 
     private DragMode HitTest(double x)
