@@ -18,6 +18,7 @@ public partial class MainWindow : Window
         DataContext = _vm;
 
         Waveform.SeekRequested += _vm.Seek;
+        Waveform.LoopPointMoved += _vm.MoveLoopPoint;
         _vm.PropertyChanged += OnViewModelChanged;
 
         _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
@@ -36,6 +37,8 @@ public partial class MainWindow : Window
     {
         if (e.PropertyName == nameof(MainViewModel.IsPlaying))
             PlayButton.Content = _vm.IsPlaying ? "Pausar" : "Tocar";
+        else if (e.PropertyName == nameof(MainViewModel.IsLooping))
+            LoopToggle.Background = (System.Windows.Media.Brush)FindResource(_vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
     }
 
     private void OnOpenClick(object sender, RoutedEventArgs e)

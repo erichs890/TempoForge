@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TempoForge.Core.Engine;
+using TempoForge.Core.Looping;
 using TempoForge.Core.Waveform;
 
 namespace TempoForge.App.ViewModels;
@@ -108,6 +110,149 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Cents = 0;
     }
 
+    // ---- Loop A-B ----
+
+    /// <summary>Ponto A em segundos, ou NaN se não definido.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LoopText))]
+    private double _loopA = double.NaN;
+
+    /// <summary>Ponto B em segundos, ou NaN se não definido.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LoopText))]
+    private double _loopB = double.NaN;
+
+    /// <summary>Se o trecho A-B está sendo repetido agora.</summary>
+    [ObservableProperty] private bool _isLooping;
+
+    public string LoopText
+    {
+        get
+        {
+            if (double.IsNaN(LoopA)) return "Sem loop";
+            if (double.IsNaN(LoopB)) return $"A {FormatTimePrecise(LoopA)}  —  B não definido";
+            return $"A {FormatTimePrecise(LoopA)}  —  B {FormatTimePrecise(LoopB)}  ({LoopB - LoopA:0.00} s)";
+        }
+    }
+
+    [RelayCommand]
+    private void SetLoopA()
+    {
+        if (!_engine.IsLoaded) return;
+        LoopA = _engine.PositionSeconds;
+        if (!double.IsNaN(LoopB) && LoopB <= LoopA) LoopB = double.NaN;
+        ApplyLoop(enable: !double.IsNaN(LoopB));
+    }
+
+    [RelayCommand]
+    private void SetLoopB()
+    {
+        if (!_engine.IsLoaded) return;
+        double position = _engine.PositionSeconds;
+        if (double.IsNaN(LoopA)) LoopA = 0;
+        if (position <= LoopA) return;
+        LoopB = position;
+        ApplyLoop(enable: true);
+    }
+
+    [RelayCommand]
+    private void ToggleLoop()
+    {
+        if (double.IsNaN(LoopA) || double.IsNaN(LoopB)) return;
+        ApplyLoop(enable: !IsLooping);
+    }
+
+    [RelayCommand]
+    private void ClearLoop()
+    {
+        LoopA = double.NaN;
+        LoopB = double.NaN;
+        ApplyLoop(enable: false);
+    }
+
+    /// <summary>Move um dos pontos do loop (arraste na forma de onda ou ajuste fino).</summary>
+    public void MoveLoopPoint(bool isA, double seconds)
+    {
+        if (!_engine.IsLoaded) return;
+        seconds = Math.Clamp(seconds, 0, Duration);
+        if (isA)
+        {
+            if (!double.IsNaN(LoopB)) seconds = Math.Min(seconds, LoopB - 0.05);
+            LoopA = Math.Max(0, seconds);
+        }
+        else
+        {
+            if (double.IsNaN(LoopA)) return;
+            LoopB = Math.Max(seconds, LoopA + 0.05);
+        }
+        ApplyLoop(enable: IsLooping);
+    }
+
+    private void ApplyLoop(bool enable)
+    {
+        if (enable && !double.IsNaN(LoopA) && !double.IsNaN(LoopB) && _engine.SetLoop(LoopA, LoopB))
+        {
+            IsLooping = true;
+        }
+        else
+        {
+            _engine.ClearLoop();
+            IsLooping = false;
+        }
+    }
+
+    // ---- Marcadores ----
+
+    public ObservableCollection<Marker> Markers { get; } = [];
+
+    [RelayCommand]
+    private void AddMarker()
+    {
+        if (!_engine.IsLoaded) return;
+        double position = _engine.PositionSeconds;
+        if (Markers.Any(m => Math.Abs(m.Seconds - position) < 0.05)) return;
+
+        int index = 0;
+        while (index < Markers.Count && Markers[index].Seconds < position) index++;
+        Markers.Insert(index, new Marker(position, FormatTime(position)));
+    }
+
+    [RelayCommand]
+    private void RemoveMarker(Marker? marker)
+    {
+        if (marker != null) Markers.Remove(marker);
+    }
+
+    [RelayCommand]
+    private void JumpToMarker(Marker? marker)
+    {
+        if (marker != null) Seek(marker.Seconds);
+    }
+
+    [RelayCommand]
+    private void NextMarker()
+    {
+        double position = _engine.PositionSeconds;
+        Marker? next = Markers.FirstOrDefault(m => m.Seconds > position + 0.05);
+        if (next != null) Seek(next.Seconds);
+    }
+
+    [RelayCommand]
+    private void PreviousMarker()
+    {
+        // Margem de 1 s: apertar duas vezes seguidas volta ao marcador anterior, não ao mesmo.
+        double position = _engine.PositionSeconds;
+        Marker? previous = Markers.LastOrDefault(m => m.Seconds < position - 1.0);
+        Seek(previous?.Seconds ?? 0);
+    }
+
+    public static string FormatTimePrecise(double seconds)
+    {
+        if (double.IsNaN(seconds) || seconds < 0) seconds = 0;
+        int minutes = (int)(seconds / 60);
+        return $"{minutes}:{seconds - minutes * 60:00.00}";
+    }
+
     /// <summary>Abre um arquivo. Lança exceção com mensagem legível se o formato não puder ser lido.</summary>
     public void OpenFile(string path)
     {
@@ -119,6 +264,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         DurationText = FormatTime(Duration);
         Position = 0;
         IsLoaded = true;
+        LoopA = double.NaN;
+        LoopB = double.NaN;
+        IsLooping = false;
+        Markers.Clear();
 
         _peakCancel = new CancellationTokenSource();
         Peaks = PeakData.Build(path, PeakBuckets, _peakCancel.Token, out _);

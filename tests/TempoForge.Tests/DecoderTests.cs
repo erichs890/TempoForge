@@ -92,6 +92,39 @@ public class DecoderTests
 
     [Fact]
     [Trait("Category", "Device")]
+    public void LoopRepeatsTheRegionUntilCleared()
+    {
+        using TempWave wave = TempWave.Sine(4.0, 440, amplitude: 0.001f);
+        using var engine = new AudioEngine();
+        engine.Open(wave.Path);
+        engine.Play();
+        Thread.Sleep(300);
+
+        Assert.False(engine.SetLoop(1.0, 1.01)); // curto demais
+        Assert.True(engine.SetLoop(1.0, 1.5));
+        Thread.Sleep(300); // posição estava fora do trecho: o motor salta para A
+
+        int wraps = 0;
+        double last = engine.PositionSeconds;
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        while (clock.Elapsed.TotalSeconds < 2.25)
+        {
+            Thread.Sleep(15);
+            double now = engine.PositionSeconds;
+            Assert.InRange(now, 0.95, 1.55);
+            if (now < last - 0.2) wraps++;
+            last = now;
+        }
+        Assert.InRange(wraps, 4, 5); // 2,25 s tocando um trecho de 0,5 s
+
+        engine.ClearLoop();
+        Thread.Sleep(900);
+        Assert.True(engine.PositionSeconds > 1.6, $"posição {engine.PositionSeconds}");
+        Assert.Equal(0, engine.UnderrunCount);
+    }
+
+    [Fact]
+    [Trait("Category", "Device")]
     public void TempoScalesHowFastThePositionAdvances()
     {
         using TempWave wave = TempWave.Sine(8.0, 440, amplitude: 0.001f);
