@@ -12,7 +12,12 @@ namespace TempoForge.App.ViewModels;
 
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
-    private const int PeakBuckets = 4096;
+    /// <summary>
+    /// Resolução da waveform: um par mínimo/máximo a cada 5 ms, para o zoom continuar nítido.
+    /// Uma hora de áudio ocupa cerca de 6 MB.
+    /// </summary>
+    private static int PeakBucketsFor(double durationSeconds) =>
+        (int)Math.Clamp(durationSeconds * 200, 4096, 2_000_000);
 
     private readonly AudioEngine _engine = new();
     private CancellationTokenSource? _peakCancel;

@@ -18,11 +18,13 @@ public sealed class WaveformView : FrameworkElement
 
     public static readonly DependencyProperty PositionProperty = DependencyProperty.Register(
         nameof(Position), typeof(double), typeof(WaveformView),
-        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender,
+            (d, e) => ((WaveformView)d).FollowPosition((double)e.OldValue, (double)e.NewValue)));
 
     public static readonly DependencyProperty DurationProperty = DependencyProperty.Register(
         nameof(Duration), typeof(double), typeof(WaveformView),
-        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender,
+            (d, _) => ((WaveformView)d).ResetZoom()));
 
     public static readonly DependencyProperty WaveBrushProperty = DependencyProperty.Register(
         nameof(WaveBrush), typeof(Brush), typeof(WaveformView),
@@ -35,6 +37,12 @@ public sealed class WaveformView : FrameworkElement
     public static readonly DependencyProperty BackgroundProperty = DependencyProperty.Register(
         nameof(Background), typeof(Brush), typeof(WaveformView),
         new FrameworkPropertyMetadata(Brushes.Transparent, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty PlayheadBrushProperty = DependencyProperty.Register(
+        nameof(PlayheadBrush), typeof(Brush), typeof(WaveformView),
+        new FrameworkPropertyMetadata(Brushes.White, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public Brush PlayheadBrush { get => (Brush)GetValue(PlayheadBrushProperty); set => SetValue(PlayheadBrushProperty, value); }
 
     public static readonly DependencyProperty LoopAProperty = DependencyProperty.Register(
         nameof(LoopA), typeof(double), typeof(WaveformView),
@@ -83,7 +91,93 @@ public sealed class WaveformView : FrameworkElement
 
     private void OnMarkerListChanged(object? sender, NotifyCollectionChangedEventArgs e) => InvalidateVisual();
 
-    private double TimeToX(double seconds) => Duration > 0 ? seconds / Duration * ActualWidth : 0;
+    // ---- Zoom ----
+    // A janela visível vai de _viewStart a _viewStart + VisibleSpan, em segundos do arquivo.
+    private const double MinVisibleSeconds = 1.0;
+    private const double ZoomStep = 1.3;
+    private double _zoom = 1.0;
+    private double _viewStart;
+
+    /// <summary>Fator de ampliação atual (1 = a música inteira).</summary>
+    public double Zoom => _zoom;
+
+    /// <summary>O zoom ou o trecho visível mudou.</summary>
+    public event Action? ViewChanged;
+
+    private double MaxZoom => Duration > MinVisibleSeconds ? Duration / MinVisibleSeconds : 1.0;
+    private double VisibleSpan => Duration / _zoom;
+
+    private double TimeToX(double seconds) =>
+        Duration > 0 ? (seconds - _viewStart) / VisibleSpan * ActualWidth : 0;
+
+    private double XToTime(double x) =>
+        Duration > 0 && ActualWidth > 0
+            ? Math.Clamp(_viewStart + Math.Clamp(x / ActualWidth, 0, 1) * VisibleSpan, 0, Duration)
+            : 0;
+
+    private void SetView(double zoom, double viewStart)
+    {
+        zoom = Math.Clamp(zoom, 1.0, MaxZoom);
+        double span = Duration / zoom;
+        viewStart = Math.Clamp(viewStart, 0, Math.Max(0, Duration - span));
+        if (zoom == _zoom && viewStart == _viewStart) return;
+        _zoom = zoom;
+        _viewStart = viewStart;
+        InvalidateWave();
+        ViewChanged?.Invoke();
+    }
+
+    /// <summary>Amplia ou reduz mantendo fixo na tela o instante <paramref name="anchorSeconds"/>.</summary>
+    private void ZoomAround(double factor, double anchorSeconds)
+    {
+        if (Duration <= 0) return;
+        double fraction = (anchorSeconds - _viewStart) / VisibleSpan;
+        double zoom = Math.Clamp(_zoom * factor, 1.0, MaxZoom);
+        SetView(zoom, anchorSeconds - fraction * (Duration / zoom));
+    }
+
+    /// <summary>O ponto fixo dos botões de zoom é o cursor de reprodução, se visível; senão o centro.</summary>
+    private double ButtonAnchor =>
+        Position >= _viewStart && Position <= _viewStart + VisibleSpan ? Position : _viewStart + VisibleSpan / 2;
+
+    public void ZoomIn() => ZoomAround(ZoomStep * ZoomStep, ButtonAnchor);
+    public void ZoomOut() => ZoomAround(1 / (ZoomStep * ZoomStep), ButtonAnchor);
+    public void ResetZoom() => SetView(1.0, 0);
+
+    /// <summary>Amplia para que o trecho dado ocupe a tela, com uma margem.</summary>
+    public void ZoomToRange(double startSeconds, double endSeconds)
+    {
+        if (Duration <= 0 || !(endSeconds > startSeconds)) return;
+        double margin = (endSeconds - startSeconds) * 0.15;
+        double span = Math.Max(MinVisibleSeconds, endSeconds - startSeconds + 2 * margin);
+        SetView(Duration / span, startSeconds - margin);
+    }
+
+    /// <summary>
+    /// Com zoom, a janela acompanha a reprodução por páginas: quando o cursor sai pela borda
+    /// (ou salta por causa de uma busca), a janela pula para deixá-lo perto do início.
+    /// Se o usuário deslocou a janela para longe do cursor, ela fica onde está.
+    /// </summary>
+    private void FollowPosition(double previous, double current)
+    {
+        if (_zoom <= 1.0 || _drag != DragMode.None) return;
+        double end = _viewStart + VisibleSpan;
+        bool wasVisible = previous >= _viewStart && previous <= end;
+        bool isVisible = current >= _viewStart && current <= end;
+        bool jumped = Math.Abs(current - previous) > 1.0;
+        if (!isVisible && (wasVisible || jumped)) SetView(_zoom, current - VisibleSpan * 0.1);
+    }
+
+    protected override void OnMouseWheel(MouseWheelEventArgs e)
+    {
+        if (Duration <= 0) return;
+        double notches = e.Delta / 120.0;
+        if (Keyboard.Modifiers == ModifierKeys.Shift)
+            SetView(_zoom, _viewStart - notches * VisibleSpan * 0.15); // desloca
+        else
+            ZoomAround(Math.Pow(ZoomStep, notches), XToTime(e.GetPosition(this).X));
+        e.Handled = true;
+    }
 
     private void DrawOverlays(DrawingContext dc, double w, double h)
     {
@@ -99,7 +193,8 @@ public sealed class WaveformView : FrameworkElement
                 var fill = LoopBrush.Clone();
                 fill.Opacity = IsLooping ? 0.22 : 0.08;
                 fill.Freeze();
-                dc.DrawRectangle(fill, null, new Rect(ax, 0, Math.Max(0, bx - ax), h));
+                double left = Math.Max(0, ax), right = Math.Min(w, bx);
+                if (right > left) dc.DrawRectangle(fill, null, new Rect(left, 0, right - left, h));
                 DrawHandle(dc, line, bx, h, "B");
             }
             DrawHandle(dc, line, ax, h, "A");
@@ -110,6 +205,7 @@ public sealed class WaveformView : FrameworkElement
             foreach (Marker marker in Markers)
             {
                 double x = Math.Round(TimeToX(marker.Seconds));
+                if (x < -6 || x > w + 6) continue;
                 dc.DrawRectangle(MarkerBrush, null, new Rect(x - 0.5, 0, 1, h));
                 var flag = new StreamGeometry();
                 using (StreamGeometryContext ctx = flag.Open())
@@ -127,6 +223,7 @@ public sealed class WaveformView : FrameworkElement
     private void DrawHandle(DrawingContext dc, Brush brush, double x, double h, string label)
     {
         x = Math.Round(x);
+        if (x < -9 || x > ActualWidth + 9) return;
         dc.DrawRectangle(brush, null, new Rect(x - 1, 0, 2, h));
         dc.DrawRoundedRectangle(brush, null, new Rect(x - 8, h - 16, 16, 16), 3, 3);
         var text = new FormattedText(label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
@@ -176,7 +273,7 @@ public sealed class WaveformView : FrameworkElement
                 || dpi != _waveDpi || !ReferenceEquals(WaveBrush, _waveImageBrush)
                 || !ReferenceEquals(PlayedBrush, _playedImageBrush))
             {
-                Geometry wave = BuildGeometry(peaks, filled, w, h);
+                Geometry wave = BuildGeometry(peaks, filled, w, h, _zoom, Duration > 0 ? _viewStart / Duration : 0);
                 _waveImage = Rasterize(wave, WaveBrush, w, h, dpi);
                 _playedImage = Rasterize(wave, PlayedBrush, w, h, dpi);
                 _waveImageBrush = WaveBrush;
@@ -187,7 +284,7 @@ public sealed class WaveformView : FrameworkElement
                 _waveDpi = dpi;
             }
 
-            double playedX = Duration > 0 ? Math.Clamp(Position / Duration, 0, 1) * w : 0;
+            double playedX = Duration > 0 ? Math.Clamp(TimeToX(Position), 0, w) : 0;
             var bounds = new Rect(0, 0, w, h);
 
             dc.PushClip(new RectangleGeometry(new Rect(playedX, 0, Math.Max(0, w - playedX), h)));
@@ -200,8 +297,18 @@ public sealed class WaveformView : FrameworkElement
 
             DrawOverlays(dc, w, h);
 
-            if (Duration > 0)
-                dc.DrawRectangle(Brushes.White, null, new Rect(Math.Round(playedX) - 0.5, 0, 1.5, h));
+            if (Duration > 0 && Position >= _viewStart && Position <= _viewStart + VisibleSpan)
+                dc.DrawRectangle(PlayheadBrush, null, new Rect(Math.Round(playedX) - 0.5, 0, 1.5, h));
+
+            if (Duration > 0 && _zoom > 1.0)
+            {
+                // Faixa-guia: mostra que parte da música está na tela e onde está o cursor.
+                dc.DrawRectangle(WaveBrush, null, new Rect(0, h - 3, w, 3));
+                dc.DrawRectangle(PlayedBrush, null,
+                    new Rect(_viewStart / Duration * w, h - 3, Math.Max(3, w / _zoom), 3));
+                dc.DrawRectangle(PlayheadBrush, null,
+                    new Rect(Math.Clamp(Position / Duration, 0, 1) * (w - 1.5), h - 4, 1.5, 4));
+            }
         }
     }
 
@@ -217,19 +324,20 @@ public sealed class WaveformView : FrameworkElement
         return bitmap;
     }
 
-    private static Geometry BuildGeometry(PeakData peaks, int filled, double w, double h)
+    private static Geometry BuildGeometry(PeakData peaks, int filled, double w, double h, double zoom, double startFraction)
     {
         var geometry = new StreamGeometry();
         using (StreamGeometryContext ctx = geometry.Open())
         {
             double mid = h / 2, scale = h / 2 * 0.95;
             int columns = (int)w;
-            double bucketsPerColumn = peaks.Buckets / (double)columns;
+            double bucketsPerColumn = peaks.Buckets / zoom / columns;
+            double firstBucket = startFraction * peaks.Buckets;
 
             for (int x = 0; x < columns; x++)
             {
-                int from = (int)(x * bucketsPerColumn);
-                int to = Math.Max(from + 1, (int)((x + 1) * bucketsPerColumn));
+                int from = (int)(firstBucket + x * bucketsPerColumn);
+                int to = Math.Max(from + 1, (int)(firstBucket + (x + 1) * bucketsPerColumn));
                 if (from >= filled) break;
                 to = Math.Min(to, filled);
 
@@ -245,8 +353,10 @@ public sealed class WaveformView : FrameworkElement
                 if (bottom - top < 1) { top = mid - 0.5; bottom = mid + 0.5; }
 
                 ctx.BeginFigure(new Point(x, top), true, true);
-                ctx.LineTo(new Point(x + 0.8, top), false, false);
-                ctx.LineTo(new Point(x + 0.8, bottom), false, false);
+                // Com muito zoom um mesmo trecho ocupa várias colunas: fecha as frestas entre elas.
+                double right = x + (bucketsPerColumn < 1 ? 1.0 : 0.8);
+                ctx.LineTo(new Point(right, top), false, false);
+                ctx.LineTo(new Point(right, bottom), false, false);
                 ctx.LineTo(new Point(x, bottom), false, false);
             }
         }
@@ -295,7 +405,7 @@ public sealed class WaveformView : FrameworkElement
 
         if (_drag == DragMode.Seek) RequestSeek(x);
         else if (_drag is DragMode.LoopA or DragMode.LoopB && ActualWidth > 0)
-            LoopPointMoved?.Invoke(_drag == DragMode.LoopA, Math.Clamp(x / ActualWidth, 0, 1) * Duration);
+            LoopPointMoved?.Invoke(_drag == DragMode.LoopA, XToTime(x));
     }
 
     protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
@@ -307,6 +417,6 @@ public sealed class WaveformView : FrameworkElement
     private void RequestSeek(double x)
     {
         if (Duration <= 0 || ActualWidth <= 0) return;
-        SeekRequested?.Invoke(Math.Clamp(x / ActualWidth, 0, 1) * Duration);
+        SeekRequested?.Invoke(XToTime(x));
     }
 }

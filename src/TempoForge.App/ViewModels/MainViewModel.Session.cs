@@ -119,14 +119,15 @@ public sealed partial class MainViewModel
         string? key = DataStore.TrackKey(path);
         string? cachePath = key == null ? null : _store.PeaksPath(key);
 
-        PeakData? cached = cachePath == null ? null : PeakData.TryLoad(cachePath, PeakBuckets);
+        int buckets = PeakBucketsFor(_engine.DurationSeconds);
+        PeakData? cached = cachePath == null ? null : PeakData.TryLoad(cachePath, buckets);
         if (cached != null)
         {
             Peaks = cached;
             return;
         }
 
-        PeakData peaks = PeakData.Build(path, PeakBuckets, _peakCancel.Token, out Task scan);
+        PeakData peaks = PeakData.Build(path, buckets, _peakCancel.Token, out Task scan);
         Peaks = peaks;
         if (cachePath != null)
             scan.ContinueWith(_ => peaks.Save(cachePath), TaskContinuationOptions.OnlyOnRanToCompletion);

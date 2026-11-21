@@ -29,6 +29,7 @@ public partial class MainWindow : Window
 
         Waveform.SeekRequested += _vm.Seek;
         Waveform.LoopPointMoved += _vm.MoveLoopPoint;
+        Waveform.ViewChanged += () => ZoomLabel.Text = Waveform.Zoom > 1.0 ? $"{Waveform.Zoom:0.#}×" : "";
         _vm.PropertyChanged += OnViewModelChanged;
 
         _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
@@ -168,6 +169,26 @@ public partial class MainWindow : Window
     private void OnBackClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(-5);
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(5);
+
+    // ---- Zoom da faixa ----
+
+    private void OnZoomInClick(object sender, RoutedEventArgs e) => Waveform.ZoomIn();
+
+    private void OnZoomOutClick(object sender, RoutedEventArgs e) => Waveform.ZoomOut();
+
+    private void OnZoomResetClick(object sender, RoutedEventArgs e) => Waveform.ResetZoom();
+
+    private void OnZoomLoopClick(object sender, RoutedEventArgs e) => Waveform.ZoomToRange(_vm.LoopA, _vm.LoopB);
+
+    // ---- Equalizador ----
+
+    /// <summary>Duplo clique em um controle do equalizador devolve-o a 0 dB.</summary>
+    private void OnEqSliderDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not Slider slider) return;
+        slider.Value = 0;
+        e.Handled = true;
+    }
 
     // ---- Atalhos de teclado ----
 
