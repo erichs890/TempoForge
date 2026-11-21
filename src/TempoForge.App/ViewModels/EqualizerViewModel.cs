@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.App.Localization;
 using TempoForge.Core.Dsp;
 
 namespace TempoForge.App.ViewModels;
@@ -26,10 +27,19 @@ public sealed partial class EqBandViewModel : ObservableObject
 
     public string GainText => GainDb == 0 ? "0" : $"{GainDb:+0.0;−0.0}";
 
+    public void RefreshTexts() => OnPropertyChanged(nameof(GainText));
+
     partial void OnGainDbChanged(double value) => _settings.SetEqGainDb(_index, (float)value);
 }
 
-public sealed record EqPreset(string Name, double[] GainsDb);
+/// <summary>Uma curva pronta; o nome exibido acompanha o idioma.</summary>
+public sealed class EqPreset(string key, double[] gainsDb) : ObservableObject
+{
+    public double[] GainsDb { get; } = gainsDb;
+    public string Name => Loc.T(key);
+    public void RefreshName() => OnPropertyChanged(nameof(Name));
+    public override string ToString() => Name;
+}
 
 public sealed partial class EqualizerViewModel : ObservableObject
 {
@@ -44,25 +54,31 @@ public sealed partial class EqualizerViewModel : ObservableObject
             var band = new EqBandViewModel(settings, i);
             band.PropertyChanged += (_, e) =>
             {
-                // Mexer numa banda à mão deixa de corresponder a qualquer predefinição.
-                if (e.PropertyName == nameof(EqBandViewModel.GainDb) && !_applyingPreset) SelectedPreset = null;
+                // Mexer numa banda à mão normalmente deixa de corresponder a qualquer predefinição;
+                // se a curva voltar a coincidir com uma (ex.: tudo zerado), ela é selecionada.
+                if (e.PropertyName == nameof(EqBandViewModel.GainDb) && !_applyingPreset)
+                    SelectedPreset = Presets.FirstOrDefault(p => p.GainsDb.SequenceEqual(GetGains()));
             };
             Bands.Add(band);
         }
         _selectedPreset = Presets[0];
+        Loc.Changed += () =>
+        {
+            foreach (EqPreset preset in Presets) preset.RefreshName();
+        };
     }
 
     public ObservableCollection<EqBandViewModel> Bands { get; } = [];
 
     public IReadOnlyList<EqPreset> Presets { get; } =
     [
-        new("Plano", [0, 0, 0, 0, 0, 0, 0, 0]),
-        new("Mais graves", [6, 4.5, 2, 0, 0, 0, 0, 0]),
-        new("Menos graves", [-8, -5, -2, 0, 0, 0, 0, 0]),
-        new("Mais brilho", [0, 0, 0, 0, 1, 3, 5, 6]),
-        new("Voz em destaque", [-4, -2, 0, 2.5, 4, 3, 1, 0]),
-        new("Instrumento em destaque", [2, 1, -1, -3, -3, -1, 1.5, 2]),
-        new("Volume baixo", [6, 3.5, 0, -1, 0, 1.5, 4, 5]),
+        new("PresetFlat", [0, 0, 0, 0, 0, 0, 0, 0]),
+        new("PresetMoreBass", [6, 4.5, 2, 0, 0, 0, 0, 0]),
+        new("PresetLessBass", [-8, -5, -2, 0, 0, 0, 0, 0]),
+        new("PresetBright", [0, 0, 0, 0, 1, 3, 5, 6]),
+        new("PresetVoice", [-4, -2, 0, 2.5, 4, 3, 1, 0]),
+        new("PresetInstrument", [2, 1, -1, -3, -3, -1, 1.5, 2]),
+        new("PresetLowVolume", [6, 3.5, 0, -1, 0, 1.5, 4, 5]),
     ];
 
     [ObservableProperty] private bool _isEnabled = true;
@@ -92,6 +108,13 @@ public sealed partial class EqualizerViewModel : ObservableObject
     {
         SelectedPreset = Presets[0];
         PreampDb = 0;
+    }
+
+    /// <summary>Reemite os textos formatados (o separador decimal muda com o idioma).</summary>
+    public void RefreshTexts()
+    {
+        OnPropertyChanged(nameof(PreampText));
+        foreach (EqBandViewModel band in Bands) band.RefreshTexts();
     }
 
     public double[] GetGains() => Bands.Select(b => b.GainDb).ToArray();

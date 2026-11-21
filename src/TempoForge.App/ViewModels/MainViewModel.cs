@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.App.Localization;
 using TempoForge.Core;
 using TempoForge.Core.Engine;
 using TempoForge.Core.Export;
@@ -27,12 +28,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Equalizer = new EqualizerViewModel(_engine.Effects);
         VocalReducer = new VocalReducerViewModel(_engine.Effects);
         InitializeSession();
+        Loc.Changed += OnLanguageChanged;
+    }
+
+    /// <summary>Refaz os textos montados em código quando o idioma muda.</summary>
+    private void OnLanguageChanged()
+    {
+        if (!IsLoaded) Title = Loc.T("NoFile");
+        OnPropertyChanged(nameof(SpeedText));
+        OnPropertyChanged(nameof(LoopText));
+        ApplyLibraryFilter();
+        Equalizer.RefreshTexts();
+        VocalReducer.RefreshTexts();
     }
 
     public EqualizerViewModel Equalizer { get; }
     public VocalReducerViewModel VocalReducer { get; }
 
-    [ObservableProperty] private string _title = "Nenhum arquivo aberto";
+    [ObservableProperty] private string _title = Loc.T("NoFile");
     [ObservableProperty] private bool _isLoaded;
     [ObservableProperty] private bool _isPlaying;
     [ObservableProperty] private double _position;
@@ -159,10 +172,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public string DescribeAdjustments()
     {
-        var parts = new List<string> { $"velocidade {SpeedText}", $"tom {PitchText}" };
-        if (Equalizer.IsEnabled) parts.Add("equalizador ligado");
-        if (VocalReducer.IsEnabled) parts.Add("redução de voz ligada");
-        return "O arquivo será gravado como você está ouvindo: " + string.Join(", ", parts) + ".";
+        var parts = new List<string> { Loc.F("DescSpeed", SpeedText), Loc.F("DescPitch", PitchText) };
+        if (Equalizer.IsEnabled) parts.Add(Loc.T("DescEq"));
+        if (VocalReducer.IsEnabled) parts.Add(Loc.T("DescVocal"));
+        return Loc.F("DescPrefix", string.Join(", ", parts));
     }
 
     // ---- Loop A-B ----
@@ -184,8 +197,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         get
         {
-            if (double.IsNaN(LoopA)) return "Sem loop";
-            if (double.IsNaN(LoopB)) return $"A em {FormatTimePrecise(LoopA)}";
+            if (double.IsNaN(LoopA)) return Loc.T("NoLoop");
+            if (double.IsNaN(LoopB)) return Loc.F("LoopAAt", FormatTimePrecise(LoopA));
             return $"{FormatTimePrecise(LoopA)} – {FormatTimePrecise(LoopB)}  ({LoopB - LoopA:0.0} s)";
         }
     }

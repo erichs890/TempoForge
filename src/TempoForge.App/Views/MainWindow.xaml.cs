@@ -7,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Win32;
 using TempoForge.App.Input;
+using TempoForge.App.Localization;
 using TempoForge.App.Themes;
 using TempoForge.App.ViewModels;
 using TempoForge.Core.Decoding;
@@ -23,7 +24,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        WindowTheme.UseDarkTitleBar(this);
+        WindowTheme.SyncTitleBar(this);
         DataContext = _vm;
         RestoreWindowPlacement();
 
@@ -31,6 +32,11 @@ public partial class MainWindow : Window
         Waveform.LoopPointMoved += _vm.MoveLoopPoint;
         Waveform.ViewChanged += () => ZoomLabel.Text = Waveform.Zoom > 1.0 ? $"{Waveform.Zoom:0.#}×" : "";
         _vm.PropertyChanged += OnViewModelChanged;
+
+        foreach (ComboBoxItem item in LanguageBox.Items)
+            if ((string)item.Tag == Loc.Language) LanguageBox.SelectedItem = item;
+        UpdateThemeButton();
+        Loc.Changed += UpdateThemeButton;
 
         _timer = new DispatcherTimer(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
         _timer.Tick += (_, _) =>
@@ -63,8 +69,9 @@ public partial class MainWindow : Window
             PlayButton.Content = _vm.IsPlaying ? "" : ""; // ícones de pausar / tocar
         else if (e.PropertyName == nameof(MainViewModel.IsLooping))
         {
-            LoopToggle.Background = (Brush)FindResource(_vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
-            LoopToggle.Foreground = (Brush)FindResource(_vm.IsLooping ? "OnAccentBrush" : "TextBrush");
+            // Referências dinâmicas: as cores acompanham a troca de tema.
+            LoopToggle.SetResourceReference(BackgroundProperty, _vm.IsLooping ? "LoopBrush" : "SurfaceHighBrush");
+            LoopToggle.SetResourceReference(ForegroundProperty, _vm.IsLooping ? "OnLoopBrush" : "TextBrush");
         }
         else if (e.PropertyName == nameof(MainViewModel.IsLoaded))
             EmptyState.Visibility = _vm.IsLoaded ? Visibility.Collapsed : Visibility.Visible;
@@ -79,8 +86,8 @@ public partial class MainWindow : Window
         string patterns = string.Join(";", AudioDecoder.SupportedExtensions.Select(x => "*" + x));
         var dialog = new OpenFileDialog
         {
-            Title = "Abrir áudio",
-            Filter = $"Arquivos de áudio|{patterns}|Todos os arquivos|*.*",
+            Title = Loc.T("OpenTitle"),
+            Filter = $"{Loc.T("FilterAudio")}|{patterns}|{Loc.T("FilterAll")}|*.*",
         };
         if (dialog.ShowDialog(this) == true) TryOpen(dialog.FileName);
     }
@@ -91,7 +98,7 @@ public partial class MainWindow : Window
         {
             _vm.ForgetRecent(path);
             if (!quiet)
-                MessageBox.Show(this, $"Este arquivo não existe mais:\n\n{path}", "TempoForge",
+                MessageBox.Show(this, Loc.F("FileGone", path), "TempoForge",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -103,7 +110,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             if (!quiet)
-                MessageBox.Show(this, $"Não foi possível abrir este arquivo.\n\n{ex.Message}", "TempoForge",
+                MessageBox.Show(this, Loc.F("OpenFailed", ex.Message), "TempoForge",
                     MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -124,7 +131,7 @@ public partial class MainWindow : Window
 
     private void OnAddFolderClick(object sender, RoutedEventArgs e)
     {
-        var dialog = new OpenFolderDialog { Title = "Escolha uma pasta de músicas" };
+        var dialog = new OpenFolderDialog { Title = Loc.T("PickFolder") };
         if (dialog.ShowDialog(this) == true) _vm.AddLibraryFolder(dialog.FolderName);
     }
 
@@ -169,6 +176,28 @@ public partial class MainWindow : Window
     private void OnBackClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(-5);
 
     private void OnForwardClick(object sender, RoutedEventArgs e) => _vm.SeekRelative(5);
+
+    // ---- Tema e idioma ----
+
+    /// <summary>O botão mostra o tema para o qual ele troca.</summary>
+    private void UpdateThemeButton() =>
+        ThemeButton.Content = Loc.T(ThemeManager.IsDark ? "ThemeLight" : "ThemeDark");
+
+    private void OnThemeClick(object sender, RoutedEventArgs e)
+    {
+        ThemeManager.Apply(ThemeManager.IsDark ? ThemeManager.Light : ThemeManager.Dark);
+        _vm.Settings.Theme = ThemeManager.Current;
+        _vm.SaveNow();
+        UpdateThemeButton();
+    }
+
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LanguageBox.SelectedItem is not ComboBoxItem { Tag: string language } || language == Loc.Language) return;
+        Loc.Apply(language);
+        _vm.Settings.Language = language;
+        _vm.SaveNow();
+    }
 
     // ---- Zoom da faixa ----
 

@@ -15,6 +15,12 @@ public sealed class AppSettings
     public double WindowHeight { get; set; } = 780;
     public bool WindowMaximized { get; set; }
 
+    /// <summary>"dark" ou "light".</summary>
+    public string Theme { get; set; } = "dark";
+
+    /// <summary>"pt" ou "en"; nulo = seguir o idioma do Windows.</summary>
+    public string? Language { get; set; }
+
     public string? LastFile { get; set; }
     public List<string> Recents { get; set; } = [];
     public List<string> LibraryFolders { get; set; } = [];

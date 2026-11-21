@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows;
 using Microsoft.Win32;
+using TempoForge.App.Localization;
 using TempoForge.Core.Export;
 
 namespace TempoForge.App.Views;
@@ -19,7 +20,7 @@ public partial class ExportDialog : Window
     public ExportDialog(ExportOptions template, string suggestedName, string summary)
     {
         InitializeComponent();
-        Themes.WindowTheme.UseDarkTitleBar(this);
+        Themes.WindowTheme.SyncTitleBar(this);
         _template = template;
         _suggestedName = suggestedName;
         Summary.Text = summary;
@@ -42,7 +43,7 @@ public partial class ExportDialog : Window
         string extension = mp3 ? ".mp3" : ".wav";
         var dialog = new SaveFileDialog
         {
-            Title = "Salvar áudio exportado",
+            Title = Loc.T("ExportSaveTitle"),
             FileName = _suggestedName + extension,
             DefaultExt = extension,
             Filter = mp3 ? "MP3|*.mp3" : "WAV|*.wav",
@@ -53,7 +54,7 @@ public partial class ExportDialog : Window
         if (string.Equals(Path.GetFullPath(dialog.FileName), Path.GetFullPath(_template.SourcePath),
                 StringComparison.OrdinalIgnoreCase))
         {
-            Status.Text = "Escolha outro nome: não é possível gravar por cima do arquivo que está aberto.";
+            Status.Text = Loc.T("ExportSameFile");
             return;
         }
 
@@ -68,10 +69,10 @@ public partial class ExportDialog : Window
         _cancel = new CancellationTokenSource();
         OptionsPanel.IsEnabled = false;
         ExportButton.IsEnabled = false;
-        CancelButton.Content = "Cancelar";
+        CancelButton.Content = Loc.T("Cancel");
         Progress.Visibility = Visibility.Visible;
         Progress.Value = 0;
-        Status.Text = "Exportando…";
+        Status.Text = Loc.T("Exporting");
 
         var progress = new Progress<double>(value => Progress.Value = value);
         try
@@ -79,16 +80,16 @@ public partial class ExportDialog : Window
             CancellationToken token = _cancel.Token;
             await Task.Run(() => AudioExporter.Export(options, progress, token), token);
             Progress.Value = 1;
-            Status.Text = $"Pronto: {Path.GetFileName(options.OutputPath)}";
+            Status.Text = Loc.F("ExportDone", Path.GetFileName(options.OutputPath));
         }
         catch (OperationCanceledException)
         {
-            Status.Text = "Exportação cancelada.";
+            Status.Text = Loc.T("ExportCancelled");
             Progress.Visibility = Visibility.Hidden;
         }
         catch (Exception ex)
         {
-            Status.Text = $"Não foi possível exportar. {ex.Message}";
+            Status.Text = Loc.F("ExportFailed", ex.Message);
             Progress.Visibility = Visibility.Hidden;
         }
         finally
@@ -97,7 +98,7 @@ public partial class ExportDialog : Window
             _cancel = null;
             OptionsPanel.IsEnabled = true;
             ExportButton.IsEnabled = true;
-            CancelButton.Content = "Fechar";
+            CancelButton.Content = Loc.T("Close");
         }
     }
 

@@ -5,9 +5,9 @@
         WindowStartupLocation="CenterScreen"
         Style="{StaticResource AppWindow}">
     <StackPanel Margin="22">
-        <TextBlock x:Name="Status" Text="Verificando atualizações…" TextWrapping="Wrap" />
+        <TextBlock x:Name="Status" Text="{DynamicResource S.UpdChecking}" TextWrapping="Wrap" />
         <ProgressBar x:Name="Progress" Margin="0,14,0,0" Minimum="0" Maximum="1" IsIndeterminate="True" />
-        <Button x:Name="SkipButton" Content="Abrir sem atualizar" HorizontalAlignment="Right" MinWidth="150"
+        <Button x:Name="SkipButton" Content="{DynamicResource S.UpdSkip}" HorizontalAlignment="Right" MinWidth="150"
                 Margin="0,16,0,0" Click="OnSkipClick" />
     </StackPanel>
 </Window>

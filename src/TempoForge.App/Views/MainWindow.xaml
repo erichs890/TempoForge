@@ -12,30 +12,40 @@
         </Grid.ColumnDefinitions>
 
         <!-- ================= Barra lateral: recentes e biblioteca ================= -->
-        <Border Grid.Column="0" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource OutlineBrush}" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="0,0,1,0">
             <DockPanel Margin="14,18,10,14">
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="4,0,0,16">
                     <!-- Marca: três barras em brasa, como uma onda sobre a bigorna -->
                     <Canvas Width="22" Height="22" VerticalAlignment="Center">
-                        <Rectangle Canvas.Left="1" Canvas.Top="9" Width="4" Height="10" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
-                        <Rectangle Canvas.Left="9" Canvas.Top="2" Width="4" Height="17" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
-                        <Rectangle Canvas.Left="17" Canvas.Top="6" Width="4" Height="13" RadiusX="2" RadiusY="2" Fill="{StaticResource AccentGradient}" />
+                        <Rectangle Canvas.Left="1" Canvas.Top="9" Width="4" Height="10" RadiusX="2" RadiusY="2" Fill="{DynamicResource AccentGradient}" />
+                        <Rectangle Canvas.Left="9" Canvas.Top="2" Width="4" Height="17" RadiusX="2" RadiusY="2" Fill="{DynamicResource AccentGradient}" />
+                        <Rectangle Canvas.Left="17" Canvas.Top="6" Width="4" Height="13" RadiusX="2" RadiusY="2" Fill="{DynamicResource AccentGradient}" />
                     </Canvas>
                     <TextBlock Text="TempoForge" FontFamily="{StaticResource DisplayFont}" FontSize="18" FontWeight="Bold"
                                Margin="9,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
-                    <RadioButton x:Name="RecentsTab" Content="Recentes" IsChecked="True" GroupName="Side"
+                    <RadioButton x:Name="RecentsTab" Content="{DynamicResource S.Recents}" IsChecked="True" GroupName="Side"
                                  Style="{StaticResource TabRadio}" />
-                    <RadioButton x:Name="LibraryTab" Content="Biblioteca" GroupName="Side" Margin="6,0,0,0"
+                    <RadioButton x:Name="LibraryTab" Content="{DynamicResource S.Library}" GroupName="Side" Margin="6,0,0,0"
                                  Style="{StaticResource TabRadio}" />
                 </StackPanel>
 
+                <DockPanel DockPanel.Dock="Bottom" Margin="0,10,4,0" LastChildFill="False">
+                    <Button x:Name="ThemeButton" DockPanel.Dock="Left" Click="OnThemeClick" Padding="10,6"
+                            ToolTip="{DynamicResource S.ThemeTip}" />
+                    <ComboBox x:Name="LanguageBox" DockPanel.Dock="Right" Width="112" ToolTip="{DynamicResource S.LanguageTip}"
+                              SelectionChanged="OnLanguageChanged">
+                        <ComboBoxItem Content="Português" Tag="pt" />
+                        <ComboBoxItem Content="English" Tag="en" />
+                    </ComboBox>
+                </DockPanel>
+
                 <!-- Recentes -->
                 <Grid Visibility="{Binding IsChecked, ElementName=RecentsTab, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="Os arquivos que você abrir aparecem aqui. Também dá para arrastar um arquivo para a janela."
+                    <TextBlock Text="{DynamicResource S.RecentsEmpty}"
                                TextWrapping="Wrap" Margin="4,6,8,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
@@ -55,10 +65,10 @@
                 <!-- Biblioteca -->
                 <DockPanel Visibility="{Binding IsChecked, ElementName=LibraryTab, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel DockPanel.Dock="Top" Margin="0,0,4,8">
-                        <Button DockPanel.Dock="Right" Content="+ Pasta" Click="OnAddFolderClick" Padding="10,6" Margin="6,0,0,0"
-                                ToolTip="Adicionar uma pasta de músicas" />
+                        <Button DockPanel.Dock="Right" Content="{DynamicResource S.AddFolder}" Click="OnAddFolderClick" Padding="10,6" Margin="6,0,0,0"
+                                ToolTip="{DynamicResource S.AddFolderTip}" />
                         <TextBox Text="{Binding LibraryFilter, UpdateSourceTrigger=PropertyChanged}"
-                                 Style="{StaticResource SearchBox}" ToolTip="Filtrar por nome" />
+                                 Style="{StaticResource SearchBox}" ToolTip="{DynamicResource S.FilterTip}" />
                     </DockPanel>
                     <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding LibraryFolders}" Margin="0,8,4,0">
                         <ItemsControl.ItemTemplate>
@@ -66,7 +76,7 @@
                                 <DockPanel Margin="0,2">
                                     <Button DockPanel.Dock="Right" Content="&#xE711;" FontFamily="{StaticResource IconFont}"
                                             FontSize="9" Padding="6,4" Style="{StaticResource GhostButton}"
-                                            ToolTip="Remover esta pasta da biblioteca (não apaga arquivos)"
+                                            ToolTip="{DynamicResource S.RemoveFolderTip}"
                                             Command="{Binding DataContext.RemoveLibraryFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}" />
                                     <TextBlock Text="{Binding}" Style="{StaticResource Caption}" TextTrimming="CharacterEllipsis"
@@ -95,11 +105,11 @@
 
             <!-- Título e ações -->
             <DockPanel Grid.Row="0" Margin="0,0,0,14">
-                <Button DockPanel.Dock="Right" Content="Atalhos" Click="OnHelpClick" Margin="8,0,0,0"
-                        Style="{StaticResource GhostButton}" ToolTip="Ver os atalhos de teclado  (F1)" />
-                <Button DockPanel.Dock="Right" Content="Exportar…" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
-                        Margin="8,0,0,0" ToolTip="Salvar o áudio com os ajustes atuais  (Ctrl+E)" />
-                <Button DockPanel.Dock="Right" Content="Abrir arquivo…" Click="OnOpenClick" ToolTip="Ctrl+O" />
+                <Button DockPanel.Dock="Right" Content="{DynamicResource S.Shortcuts}" Click="OnHelpClick" Margin="8,0,0,0"
+                        Style="{StaticResource GhostButton}" ToolTip="{DynamicResource S.ShortcutsTip}" />
+                <Button DockPanel.Dock="Right" Content="{DynamicResource S.Export}" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
+                        Margin="8,0,0,0" ToolTip="{DynamicResource S.ExportTip}" />
+                <Button DockPanel.Dock="Right" Content="{DynamicResource S.Open}" Click="OnOpenClick" ToolTip="Ctrl+O" />
                 <TextBlock Text="{Binding Title}" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
             </DockPanel>
@@ -111,26 +121,27 @@
                                     Peaks="{Binding Peaks}" Position="{Binding Position}" Duration="{Binding Duration}"
                                     LoopA="{Binding LoopA}" LoopB="{Binding LoopB}" IsLooping="{Binding IsLooping}"
                                     Markers="{Binding Markers}"
-                                    WaveBrush="{StaticResource WaveBrush}" PlayedBrush="{StaticResource AccentGradient}"
-                                    LoopBrush="{StaticResource LoopBrush}" MarkerBrush="{StaticResource MarkerBrush}"
+                                    WaveBrush="{DynamicResource WaveBrush}" PlayedBrush="{DynamicResource AccentGradient}"
+                                    LoopBrush="{DynamicResource LoopBrush}" MarkerBrush="{DynamicResource MarkerBrush}"
+                                    PlayheadBrush="{DynamicResource PlayheadBrush}" HandleTextBrush="{DynamicResource OnLoopBrush}"
                                     Cursor="IBeam" />
                     <StackPanel x:Name="ZoomBar" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
                                 IsEnabled="{Binding IsLoaded}" Opacity="0.9">
                         <TextBlock x:Name="ZoomLabel" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,8,0" />
                         <Button Content="−" Click="OnZoomOutClick" Padding="9,2" MinWidth="0"
-                                ToolTip="Reduzir o zoom  (roda do mouse)" />
+                                ToolTip="{DynamicResource S.ZoomOutTip}" />
                         <Button Content="+" Click="OnZoomInClick" Padding="9,2" MinWidth="0" Margin="4,0,0,0"
-                                ToolTip="Ampliar a faixa  (roda do mouse; Shift + roda desloca)" />
+                                ToolTip="{DynamicResource S.ZoomInTip}" />
                         <Button Content="A–B" Click="OnZoomLoopClick" Padding="9,2" MinWidth="0" Margin="4,0,0,0"
-                                ToolTip="Ampliar o trecho entre A e B" />
-                        <Button Content="Tudo" Click="OnZoomResetClick" Padding="9,2" MinWidth="0" Margin="4,0,0,0"
-                                ToolTip="Mostrar a música inteira" />
+                                ToolTip="{DynamicResource S.ZoomLoopTip}" />
+                        <Button Content="{DynamicResource S.ZoomAll}" Click="OnZoomResetClick" Padding="9,2" MinWidth="0" Margin="4,0,0,0"
+                                ToolTip="{DynamicResource S.ZoomAllTip}" />
                     </StackPanel>
                     <StackPanel x:Name="EmptyState" VerticalAlignment="Center" HorizontalAlignment="Center" IsHitTestVisible="False">
-                        <TextBlock Text="Arraste uma música para cá" FontFamily="{StaticResource DisplayFont}" FontSize="20"
+                        <TextBlock Text="{DynamicResource S.EmptyTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="20"
                                    FontWeight="SemiBold" HorizontalAlignment="Center" />
-                        <TextBlock Text="ou use “Abrir arquivo…” (Ctrl+O). MP3, M4A, FLAC, WAV e OGG."
-                                   Foreground="{StaticResource TextDimBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
+                        <TextBlock Text="{DynamicResource S.EmptyHint}"
+                                   Foreground="{DynamicResource TextDimBrush}" HorizontalAlignment="Center" Margin="0,6,0,0" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -146,12 +157,12 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" IsEnabled="{Binding IsLoaded}">
                     <TextBlock Text="{Binding PositionText}" Style="{StaticResource Readout}" FontSize="15" MinWidth="52"
                                VerticalAlignment="Center" />
-                    <Button Content="A" Command="{Binding SetLoopACommand}" ToolTip="Marcar início do loop aqui  ( [ )"
+                    <Button Content="A" Command="{Binding SetLoopACommand}" ToolTip="{DynamicResource S.LoopATip}"
                             Padding="12,6" Margin="14,0,0,0" FontWeight="SemiBold" />
-                    <Button Content="B" Command="{Binding SetLoopBCommand}" ToolTip="Marcar fim do loop aqui  ( ] )"
+                    <Button Content="B" Command="{Binding SetLoopBCommand}" ToolTip="{DynamicResource S.LoopBTip}"
                             Padding="12,6" Margin="6,0,0,0" FontWeight="SemiBold" />
                     <Button x:Name="LoopToggle" Command="{Binding ToggleLoopCommand}"
-                            ToolTip="Ligar ou desligar a repetição do trecho A-B  ( \ )" Padding="12,6" Margin="6,0,0,0">
+                            ToolTip="{DynamicResource S.LoopToggleTip}" Padding="12,6" Margin="6,0,0,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8EE;" FontFamily="{StaticResource IconFont}" FontSize="12" VerticalAlignment="Center"
                                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
@@ -159,32 +170,32 @@
                                        Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                         </StackPanel>
                     </Button>
-                    <Button Content="Limpar" Command="{Binding ClearLoopCommand}" Padding="10,6" Margin="6,0,0,0"
-                            Style="{StaticResource GhostButton}" ToolTip="Apagar os pontos A e B" />
+                    <Button Content="{DynamicResource S.Clear}" Command="{Binding ClearLoopCommand}" Padding="10,6" Margin="6,0,0,0"
+                            Style="{StaticResource GhostButton}" ToolTip="{DynamicResource S.ClearTip}" />
                     <TextBlock Text="{Binding LoopText}" Style="{StaticResource Caption}" VerticalAlignment="Center"
                                Margin="10,0,0,0" TextTrimming="CharacterEllipsis" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="18,0">
                     <Button Content="−5 s" Click="OnBackClick" IsEnabled="{Binding IsLoaded}" VerticalAlignment="Center"
-                            ToolTip="Voltar 5 segundos  ( ← )" />
+                            ToolTip="{DynamicResource S.BackTip}" />
                     <Button x:Name="PlayButton" Style="{StaticResource PlayButton}" Margin="14,4"
                             Command="{Binding PlayPauseCommand}" IsEnabled="{Binding IsLoaded}" Content="&#xE768;"
-                            ToolTip="Tocar ou pausar  (Espaço)" />
+                            ToolTip="{DynamicResource S.PlayTip}" />
                     <Button Content="+5 s" Click="OnForwardClick" IsEnabled="{Binding IsLoaded}" VerticalAlignment="Center"
-                            ToolTip="Avançar 5 segundos  ( → )" />
+                            ToolTip="{DynamicResource S.ForwardTip}" />
                 </StackPanel>
 
                 <DockPanel Grid.Column="2" VerticalAlignment="Center" IsEnabled="{Binding IsLoaded}" LastChildFill="False">
                     <TextBlock DockPanel.Dock="Right" Text="{Binding DurationText}" Style="{StaticResource Readout}" FontSize="15"
-                               Foreground="{StaticResource TextDimBrush}" MinWidth="52" TextAlignment="Right"
+                               Foreground="{DynamicResource TextDimBrush}" MinWidth="52" TextAlignment="Right"
                                VerticalAlignment="Center" Margin="14,0,0,0" />
                     <Button DockPanel.Dock="Right" Content="&#xE76C;" FontFamily="{StaticResource IconFont}" FontSize="11"
-                            Command="{Binding NextMarkerCommand}" ToolTip="Próximo marcador  ( . )" Padding="10,8" Margin="6,0,0,0" />
-                    <Button DockPanel.Dock="Right" Content="+ Marcador" Command="{Binding AddMarkerCommand}"
-                            ToolTip="Adicionar marcador aqui  ( M )" Padding="12,6" Margin="6,0,0,0" />
+                            Command="{Binding NextMarkerCommand}" ToolTip="{DynamicResource S.NextMarkerTip}" Padding="10,8" Margin="6,0,0,0" />
+                    <Button DockPanel.Dock="Right" Content="{DynamicResource S.AddMarker}" Command="{Binding AddMarkerCommand}"
+                            ToolTip="{DynamicResource S.AddMarkerTip}" Padding="12,6" Margin="6,0,0,0" />
                     <Button DockPanel.Dock="Right" Content="&#xE76B;" FontFamily="{StaticResource IconFont}" FontSize="11"
-                            Command="{Binding PreviousMarkerCommand}" ToolTip="Marcador anterior  ( , )" Padding="10,8" Margin="6,0,0,0" />
+                            Command="{Binding PreviousMarkerCommand}" ToolTip="{DynamicResource S.PrevMarkerTip}" Padding="10,8" Margin="6,0,0,0" />
                     <ScrollViewer DockPanel.Dock="Right" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
                                   MaxWidth="230" VerticalAlignment="Center">
                         <ItemsControl ItemsSource="{Binding Markers}">
@@ -196,10 +207,10 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button Content="{Binding Name}" Padding="8,4" Margin="0,0,4,0" FontSize="11"
-                                            FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource MarkerBrush}"
+                                            FontFamily="{StaticResource MonoFont}" Foreground="{DynamicResource MarkerBrush}"
                                             Command="{Binding DataContext.JumpToMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                             CommandParameter="{Binding}"
-                                            ToolTip="Clique para ir até aqui; botão direito para remover">
+                                            ToolTip="{DynamicResource S.MarkerChipTip}">
                                         <Button.InputBindings>
                                             <MouseBinding MouseAction="RightClick"
                                                           Command="{Binding DataContext.RemoveMarkerCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -224,34 +235,34 @@
 
                     <StackPanel Grid.Column="0">
                         <DockPanel>
-                            <Button DockPanel.Dock="Right" Content="Normal" Command="{Binding SpeedResetCommand}"
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Normal}" Command="{Binding SpeedResetCommand}"
                                     Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" />
                             <TextBlock DockPanel.Dock="Right" Text="{Binding SpeedText}" Style="{StaticResource Readout}"
-                                       FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AccentHotBrush}"
+                                       FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentHotBrush}"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="Velocidade" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource S.Speed}" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="0,6,0,0">
                             <Button DockPanel.Dock="Left" Content="−" Command="{Binding SpeedDownCommand}" Padding="11,3"
-                                    ToolTip="Mais devagar  ( − )" />
+                                    ToolTip="{DynamicResource S.SlowerTip}" />
                             <Button DockPanel.Dock="Right" Content="+" Command="{Binding SpeedUpCommand}" Padding="11,3"
-                                    ToolTip="Mais rápido  ( + )" />
+                                    ToolTip="{DynamicResource S.FasterTip}" />
                             <Slider Minimum="-2" Maximum="2" Value="{Binding SpeedSlider}" Margin="10,0" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="42,0,42,0">
                             <TextBlock DockPanel.Dock="Right" Text="4×" Style="{StaticResource Caption}" />
-                            <TextBlock Text="0,25×" Style="{StaticResource Caption}" />
+                            <TextBlock Text="{DynamicResource S.SpeedMin}" Style="{StaticResource Caption}" />
                         </DockPanel>
                     </StackPanel>
 
                     <StackPanel Grid.Column="2">
                         <DockPanel>
-                            <Button DockPanel.Dock="Right" Content="Normal" Command="{Binding PitchResetCommand}"
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Normal}" Command="{Binding PitchResetCommand}"
                                     Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" />
                             <TextBlock DockPanel.Dock="Right" Text="{Binding PitchText}" Style="{StaticResource Readout}"
-                                       FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AccentHotBrush}"
+                                       FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentHotBrush}"
                                        VerticalAlignment="Center" Margin="0,0,6,0" />
-                            <TextBlock Text="Tom" FontWeight="SemiBold" VerticalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource S.Pitch}" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </DockPanel>
                         <Grid Margin="0,6,0,0">
                             <Grid.ColumnDefinitions>
@@ -261,14 +272,14 @@
                                 <ColumnDefinition Width="2*" />
                             </Grid.ColumnDefinitions>
                             <Button Grid.Column="0" Content="−" Command="{Binding PitchDownCommand}" Padding="11,3"
-                                    ToolTip="Um semitom abaixo  ( ↓ )" />
+                                    ToolTip="{DynamicResource S.SemitoneDownTip}" />
                             <Slider Grid.Column="1" Minimum="-12" Maximum="12" Value="{Binding Semitones}"
                                     IsSnapToTickEnabled="True" TickFrequency="1" Margin="10,0" VerticalAlignment="Center" />
                             <Button Grid.Column="2" Content="+" Command="{Binding PitchUpCommand}" Padding="11,3"
-                                    ToolTip="Um semitom acima  ( ↑ )" />
+                                    ToolTip="{DynamicResource S.SemitoneUpTip}" />
                             <Slider Grid.Column="3" Minimum="-50" Maximum="50" Value="{Binding Cents}"
                                     IsSnapToTickEnabled="True" TickFrequency="1" Margin="18,0,4,0" VerticalAlignment="Center"
-                                    ToolTip="Afinação fina, em cents  ( Ctrl + ↑ / ↓ )" />
+                                    ToolTip="{DynamicResource S.CentsTip}" />
                         </Grid>
                         <Grid Margin="42,0,0,0">
                             <Grid.ColumnDefinitions>
@@ -276,7 +287,7 @@
                                 <ColumnDefinition Width="42" />
                                 <ColumnDefinition Width="2*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="semitons (±12)" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                            <TextBlock Text="{DynamicResource S.SemitonesCaption}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                             <TextBlock Grid.Column="2" Text="cents (±50)" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                         </Grid>
                     </StackPanel>
@@ -293,12 +304,12 @@
                 <Border Style="{StaticResource Card}" DataContext="{Binding Equalizer}">
                     <DockPanel>
                         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
-                            <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsEnabled}" Content="Equalizador" VerticalAlignment="Center" />
-                            <Button DockPanel.Dock="Right" Content="Zerar" Command="{Binding ResetCommand}"
+                            <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsEnabled}" Content="{DynamicResource S.Equalizer}" VerticalAlignment="Center" />
+                            <Button DockPanel.Dock="Right" Content="{DynamicResource S.Reset}" Command="{Binding ResetCommand}"
                                     Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" Margin="6,0,0,0" />
                             <ComboBox DockPanel.Dock="Right" Width="200" ItemsSource="{Binding Presets}"
                                       SelectedItem="{Binding SelectedPreset}" DisplayMemberPath="Name"
-                                      ToolTip="Predefinições" />
+                                      ToolTip="{DynamicResource S.PresetsTip}" />
                             <TextBlock />
                         </DockPanel>
 
@@ -306,10 +317,10 @@
                             <TextBlock Text="{Binding PreampText}" Style="{StaticResource Readout}" FontSize="11" HorizontalAlignment="Center" />
                             <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding PreampDb}"
                                     TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4"
-                                    PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="Duplo clique para zerar" />
-                            <TextBlock Text="Pré-amp" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
+                                    PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="{DynamicResource S.DoubleClickReset}" />
+                            <TextBlock Text="{DynamicResource S.Preamp}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                         </StackPanel>
-                        <Border DockPanel.Dock="Left" Width="1" Background="{StaticResource OutlineBrush}" Margin="0,4,6,4" />
+                        <Border DockPanel.Dock="Left" Width="1" Background="{DynamicResource OutlineBrush}" Margin="0,4,6,4" />
 
                         <ItemsControl ItemsSource="{Binding Bands}" IsEnabled="{Binding IsEnabled}">
                             <ItemsControl.ItemsPanel>
@@ -324,7 +335,7 @@
                                                    HorizontalAlignment="Center" />
                                         <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding GainDb}"
                                                 TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4"
-                                                PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="Duplo clique para zerar" />
+                                                PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="{DynamicResource S.DoubleClickReset}" />
                                         <TextBlock Text="{Binding Label}" Style="{StaticResource Caption}" HorizontalAlignment="Center" />
                                     </StackPanel>
                                 </DataTemplate>
@@ -335,23 +346,23 @@
 
                 <Border Grid.Column="1" Style="{StaticResource Card}" Margin="12,0,0,0" DataContext="{Binding VocalReducer}">
                     <StackPanel>
-                        <CheckBox IsChecked="{Binding IsEnabled}" Content="Reduzir voz"
-                                  ToolTip="Atenua o que está no centro do estéreo. Funciona melhor em gravações estéreo de estúdio." />
+                        <CheckBox IsChecked="{Binding IsEnabled}" Content="{DynamicResource S.ReduceVocals}"
+                                  ToolTip="{DynamicResource S.ReduceVocalsTip}" />
                         <StackPanel IsEnabled="{Binding IsEnabled}" Margin="0,12,0,0">
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding AmountText}" Style="{StaticResource Readout}" FontSize="11" />
-                                <TextBlock Text="Intensidade" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{DynamicResource S.Intensity}" Style="{StaticResource Caption}" />
                             </DockPanel>
                             <Slider Minimum="0" Maximum="100" Value="{Binding Amount}" Margin="0,0,0,6" />
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding LowCutText}" Style="{StaticResource Readout}" FontSize="11" />
-                                <TextBlock Text="Preservar graves abaixo de" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{DynamicResource S.KeepLows}" Style="{StaticResource Caption}" />
                             </DockPanel>
                             <Slider Minimum="20" Maximum="400" Value="{Binding LowCut}" Margin="0,0,0,6"
                                     TickFrequency="10" IsSnapToTickEnabled="True" />
                             <DockPanel>
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding HighCutText}" Style="{StaticResource Readout}" FontSize="11" />
-                                <TextBlock Text="Preservar agudos acima de" Style="{StaticResource Caption}" />
+                                <TextBlock Text="{DynamicResource S.KeepHighs}" Style="{StaticResource Caption}" />
                             </DockPanel>
                             <Slider Minimum="1000" Maximum="16000" Value="{Binding HighCut}"
                                     TickFrequency="500" IsSnapToTickEnabled="True" />
@@ -362,9 +373,9 @@
         </Grid>
 
         <!-- Aviso mostrado enquanto um arquivo é arrastado sobre a janela -->
-        <Border x:Name="DropHint" Grid.ColumnSpan="2" Background="#D90F1115" Visibility="Collapsed" IsHitTestVisible="False">
-            <Border BorderBrush="{StaticResource AccentBrush}" BorderThickness="2" CornerRadius="16" Margin="24">
-                <TextBlock Text="Solte para abrir" FontFamily="{StaticResource DisplayFont}" FontSize="28" FontWeight="SemiBold"
+        <Border x:Name="DropHint" Grid.ColumnSpan="2" Background="{DynamicResource ScrimBrush}" Visibility="Collapsed" IsHitTestVisible="False">
+            <Border BorderBrush="{DynamicResource AccentBrush}" BorderThickness="2" CornerRadius="16" Margin="24">
+                <TextBlock Text="{DynamicResource S.DropToOpen}" FontFamily="{StaticResource DisplayFont}" FontSize="28" FontWeight="SemiBold"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
         </Border>

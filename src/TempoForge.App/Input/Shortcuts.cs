@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using TempoForge.App.Localization;
 using TempoForge.App.ViewModels;
 
 namespace TempoForge.App.Input;
@@ -13,27 +14,27 @@ public static class Shortcuts
     public const int CentsStep = 5;
 
     /// <summary>Lista exibida na ajuda (F1).</summary>
-    public static readonly (string Keys, string Action)[] Help =
+    public static (string Keys, string Action)[] Help =>
     [
-        ("Espaço", "Tocar / pausar"),
-        ("←  /  →", "Voltar / avançar 5 s"),
-        ("Shift + ←  /  →", "Voltar / avançar 1 s"),
-        ("Home", "Ir para o início"),
-        ("[", "Marcar ponto A do loop"),
-        ("]", "Marcar ponto B do loop"),
-        ("\\", "Ligar / desligar o loop"),
-        ("+  /  −", "Velocidade ±0,05×"),
-        ("↑  /  ↓", "Tom ±1 semitom"),
-        ("Ctrl + ↑  /  ↓", "Afinação ±5 cents"),
-        ("R", "Voltar velocidade e tom ao normal"),
-        ("M", "Adicionar marcador"),
-        (",  /  .", "Marcador anterior / próximo"),
-        ("Roda do mouse na faixa", "Ampliar / reduzir o zoom"),
-        ("Shift + roda na faixa", "Deslocar a faixa ampliada"),
-        ("Duplo clique no equalizador", "Zerar a banda"),
-        ("Ctrl + O", "Abrir arquivo"),
-        ("Ctrl + E", "Exportar"),
-        ("F1", "Mostrar esta lista"),
+        (Loc.T("KeySpace"), Loc.T("HelpPlay")),
+        ("←  /  →", Loc.T("HelpSeek5")),
+        ("Shift + ←  /  →", Loc.T("HelpSeek1")),
+        ("Home", Loc.T("HelpHome")),
+        ("[", Loc.T("HelpLoopA")),
+        ("]", Loc.T("HelpLoopB")),
+        ("\\", Loc.T("HelpLoopToggle")),
+        ("+  /  −", Loc.T("HelpSpeed")),
+        ("↑  /  ↓", Loc.T("HelpPitch")),
+        ("Ctrl + ↑  /  ↓", Loc.T("HelpCents")),
+        ("R", Loc.T("HelpResetAll")),
+        ("M", Loc.T("HelpMarker")),
+        (",  /  .", Loc.T("HelpMarkerNav")),
+        (Loc.T("KeyWheel"), Loc.T("HelpZoom")),
+        (Loc.T("KeyShiftWheel"), Loc.T("HelpPan")),
+        (Loc.T("KeyEqDouble"), Loc.T("HelpEqReset")),
+        ("Ctrl + O", Loc.T("HelpOpen")),
+        ("Ctrl + E", Loc.T("HelpExport")),
+        ("F1", Loc.T("HelpThis")),
     ];
 
     /// <summary>Teclas que não geram texto. Devolve verdadeiro se o atalho foi atendido.</summary>

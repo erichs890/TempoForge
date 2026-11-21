@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows;
+using TempoForge.App.Localization;
 using TempoForge.App.Themes;
 using TempoForge.Core.Updates;
 
@@ -19,7 +20,7 @@ public partial class UpdateWindow : Window
     public UpdateWindow()
     {
         InitializeComponent();
-        WindowTheme.UseDarkTitleBar(this);
+        WindowTheme.SyncTitleBar(this);
     }
 
     /// <summary>Verdadeiro se o instalador novo foi iniciado e o app deve encerrar.</summary>
@@ -61,13 +62,13 @@ public partial class UpdateWindow : Window
         }
         if (update == null || _cancel.IsCancellationRequested) return;
 
-        Status.Text = $"Baixando a versão {update.Version.ToString(3)}…";
+        Status.Text = Loc.F("UpdDownloading", update.Version.ToString(3));
         Progress.IsIndeterminate = false;
         var progress = new Progress<double>(value => Progress.Value = value);
         string folder = Path.Combine(Path.GetTempPath(), "TempoForge-update");
         string installer = await checker.DownloadAsync(update, folder, progress, _cancel.Token);
 
-        Status.Text = "Instalando a atualização…";
+        Status.Text = Loc.T("UpdInstalling");
         SkipButton.IsEnabled = false;
         Process.Start(new ProcessStartInfo(installer)
         {

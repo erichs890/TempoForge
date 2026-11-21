@@ -1,7 +1,10 @@
 using System.Runtime;
 using System.Windows;
 using System.Windows.Threading;
+using TempoForge.App.Localization;
+using TempoForge.App.Themes;
 using TempoForge.App.Views;
+using TempoForge.Core.Persistence;
 
 namespace TempoForge.App;
 
@@ -13,6 +16,11 @@ public partial class App : Application
         GCSettings.LatencyMode = GCLatencyMode.SustainedLowLatency;
         DispatcherUnhandledException += OnUnhandledException;
         base.OnStartup(e);
+
+        // Tema e idioma valem desde a primeira janela (inclusive a de atualização).
+        AppSettings settings = new DataStore().LoadSettings();
+        ThemeManager.Apply(settings.Theme);
+        Loc.Apply(settings.Language ?? Loc.DefaultLanguage);
 
         // Antes de abrir: se houver versão nova publicada, baixa e roda o instalador.
         if (UpdateWindow.ShouldCheck)

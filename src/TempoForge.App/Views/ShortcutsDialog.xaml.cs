@@ -8,7 +8,7 @@ public partial class ShortcutsDialog : Window
     public ShortcutsDialog()
     {
         InitializeComponent();
-        Themes.WindowTheme.UseDarkTitleBar(this);
+        Themes.WindowTheme.SyncTitleBar(this);
         List.ItemsSource = Shortcuts.Help.Select(h => new { h.Keys, h.Action }).ToList();
     }
 

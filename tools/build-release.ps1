@@ -12,10 +12,11 @@ if (-not $SkipTests) {
     if ($LASTEXITCODE -ne 0) { throw 'Os testes falharam.' }
 }
 
+# Compila em artifacts\, separado de bin\, para funcionar mesmo com o app aberto.
 $publish = Join-Path $root 'publish'
 if (Test-Path $publish) { Remove-Item $publish -Recurse -Force }
 dotnet publish src\TempoForge.App\TempoForge.App.csproj -c Release -r win-x64 --self-contained true `
-    -p:DebugType=none -o $publish --nologo
+    -p:DebugType=none -o $publish --artifacts-path (Join-Path $root 'artifacts') --nologo
 if ($LASTEXITCODE -ne 0) { throw 'Falha no publish.' }
 
 if ($SkipInstaller) { return }

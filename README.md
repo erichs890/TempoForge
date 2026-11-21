@@ -15,7 +15,8 @@ sem Electron nem webview.
 - Exportação em WAV ou MP3 com todos os ajustes, do arquivo inteiro ou só do trecho A-B.
 - Biblioteca de pastas, arquivos recentes e arrastar-e-soltar.
 - Ajustes salvos por música e restaurados ao reabrir.
-- Tema escuro próprio.
+- Zoom na waveform (roda do mouse, botões ou direto no trecho A-B) para marcar pontos com precisão.
+- Temas escuro e claro, e interface em português ou inglês, trocados na hora.
 
 Atalhos principais (F1 mostra a lista completa):
 
@@ -26,6 +27,8 @@ Atalhos principais (F1 mostra a lista completa):
 | `[` / `]` | Marcar o ponto A / B do loop |
 | `+` / `-` | Aumentar / diminuir a velocidade |
 | Ctrl+O / Ctrl+E | Abrir arquivo / exportar |
+| Roda do mouse na faixa | Zoom (com Shift, desloca) |
+| Duplo clique no equalizador | Zera a banda |
 
 ## Instalação
 

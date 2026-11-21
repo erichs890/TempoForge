@@ -5,6 +5,7 @@
 bin/
 obj/
 publish/
+artifacts/
 installer/Output/
 *.user
 .vs/

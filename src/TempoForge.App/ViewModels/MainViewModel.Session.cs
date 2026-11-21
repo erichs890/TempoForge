@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.App.Localization;
 using TempoForge.Core.Library;
 using TempoForge.Core.Looping;
 using TempoForge.Core.Persistence;
@@ -190,7 +191,7 @@ public sealed partial class MainViewModel
             return;
         }
 
-        LibraryStatus = "Procurando músicas…";
+        LibraryStatus = Loc.T("LibSearching");
         try
         {
             List<LibraryItem> items = await Task.Run(() => LibraryScanner.Scan(folders, cancel.Token), cancel.Token);
@@ -220,11 +221,11 @@ public sealed partial class MainViewModel
         }
 
         LibraryStatus = LibraryFolders.Count == 0
-            ? "Adicione uma pasta para ver suas músicas aqui."
+            ? Loc.T("LibAddFolder")
             : _allLibraryItems.Count == 0
-                ? "Nenhum arquivo de áudio nessas pastas."
+                ? Loc.T("LibNone")
                 : filter.Length > 0
-                    ? $"{LibraryItems.Count} de {_allLibraryItems.Count} músicas"
-                    : $"{_allLibraryItems.Count} músicas";
+                    ? Loc.F("LibCountFiltered", LibraryItems.Count, _allLibraryItems.Count)
+                    : Loc.F("LibCount", _allLibraryItems.Count);
     }
 }

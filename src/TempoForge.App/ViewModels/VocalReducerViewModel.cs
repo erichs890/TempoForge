@@ -30,6 +30,13 @@ public sealed partial class VocalReducerViewModel : ObservableObject
     public string LowCutText => $"{LowCut:0} Hz";
     public string HighCutText => $"{HighCut / 1000:0.0} kHz";
 
+    public void RefreshTexts()
+    {
+        OnPropertyChanged(nameof(AmountText));
+        OnPropertyChanged(nameof(LowCutText));
+        OnPropertyChanged(nameof(HighCutText));
+    }
+
     partial void OnIsEnabledChanged(bool value) => _settings.VocalReducerEnabled = value;
     partial void OnAmountChanged(double value) => _settings.VocalReducerAmount = (float)(value / 100);
     partial void OnLowCutChanged(double value) => _settings.VocalReducerLowCutHz = (float)value;

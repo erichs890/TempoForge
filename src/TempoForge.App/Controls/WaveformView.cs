@@ -44,6 +44,12 @@ public sealed class WaveformView : FrameworkElement
 
     public Brush PlayheadBrush { get => (Brush)GetValue(PlayheadBrushProperty); set => SetValue(PlayheadBrushProperty, value); }
 
+    public static readonly DependencyProperty HandleTextBrushProperty = DependencyProperty.Register(
+        nameof(HandleTextBrush), typeof(Brush), typeof(WaveformView),
+        new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public Brush HandleTextBrush { get => (Brush)GetValue(HandleTextBrushProperty); set => SetValue(HandleTextBrushProperty, value); }
+
     public static readonly DependencyProperty LoopAProperty = DependencyProperty.Register(
         nameof(LoopA), typeof(double), typeof(WaveformView),
         new FrameworkPropertyMetadata(double.NaN, FrameworkPropertyMetadataOptions.AffectsRender));
@@ -228,7 +234,7 @@ public sealed class WaveformView : FrameworkElement
         dc.DrawRoundedRectangle(brush, null, new Rect(x - 8, h - 16, 16, 16), 3, 3);
         var text = new FormattedText(label, CultureInfo.InvariantCulture, FlowDirection.LeftToRight,
             new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal),
-            10, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            10, HandleTextBrush, VisualTreeHelper.GetDpi(this).PixelsPerDip);
         dc.DrawText(text, new Point(x - text.Width / 2, h - 15));
     }
 
