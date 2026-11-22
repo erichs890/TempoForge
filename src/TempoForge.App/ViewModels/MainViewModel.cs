@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.App.Input;
 using TempoForge.App.Localization;
 using TempoForge.Core;
 using TempoForge.Core.Engine;
@@ -36,6 +37,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (!IsLoaded) Title = Loc.T("NoFile");
         OnPropertyChanged(nameof(SpeedText));
+        OnPropertyChanged(nameof(SpeedInput));
         OnPropertyChanged(nameof(LoopText));
         ApplyLibraryFilter();
         Equalizer.RefreshTexts();
@@ -58,10 +60,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     /// <summary>Velocidade em múltiplos do original (1,00 = normal).</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SpeedText), nameof(SpeedSlider))]
+    [NotifyPropertyChangedFor(nameof(SpeedText), nameof(SpeedSlider), nameof(SpeedInput))]
     private double _speed = 1.0;
 
     public string SpeedText => $"{Speed:0.00}×";
+
+    /// <summary>
+    /// Mostrador editável da velocidade: aceita "0,75", "1.25x" ou "75%". Texto inválido é
+    /// descartado e o mostrador volta ao valor em vigor.
+    /// </summary>
+    public string SpeedInput
+    {
+        get => SpeedText;
+        set
+        {
+            if (ValueInput.TryParseSpeed(value, MinSpeed, MaxSpeed, out double speed)) Speed = speed;
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>Posição do controle deslizante: escala logarítmica, 0 = velocidade normal.</summary>
     public double SpeedSlider

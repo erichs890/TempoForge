@@ -237,9 +237,11 @@
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Content="{DynamicResource S.Normal}" Command="{Binding SpeedResetCommand}"
                                     Style="{StaticResource GhostButton}" Padding="8,3" FontSize="11" />
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding SpeedText}" Style="{StaticResource Readout}"
-                                       FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentHotBrush}"
-                                       VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <TextBox DockPanel.Dock="Right" Text="{Binding SpeedInput, UpdateSourceTrigger=LostFocus}"
+                                     Style="{StaticResource ReadoutBox}" MinWidth="78"
+                                     FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource AccentHotBrush}"
+                                     VerticalAlignment="Center" Margin="0,0,4,0"
+                                     GotKeyboardFocus="OnReadoutFocus" KeyDown="OnReadoutKeyDown" />
                             <TextBlock Text="{DynamicResource S.Speed}" FontWeight="SemiBold" VerticalAlignment="Center" />
                         </DockPanel>
                         <DockPanel Margin="0,6,0,0">
@@ -314,7 +316,9 @@
                         </DockPanel>
 
                         <StackPanel DockPanel.Dock="Left" Width="62" Margin="0,0,10,0">
-                            <TextBlock Text="{Binding PreampText}" Style="{StaticResource Readout}" FontSize="11" HorizontalAlignment="Center" />
+                            <TextBox Text="{Binding PreampInput, UpdateSourceTrigger=LostFocus}" Style="{StaticResource ReadoutBox}"
+                                     FontSize="11" HorizontalAlignment="Stretch"
+                                     GotKeyboardFocus="OnReadoutFocus" KeyDown="OnReadoutKeyDown" />
                             <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding PreampDb}"
                                     TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4"
                                     PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="{DynamicResource S.DoubleClickReset}" />
@@ -331,8 +335,10 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding GainText}" Style="{StaticResource Readout}" FontSize="11"
-                                                   HorizontalAlignment="Center" />
+                                        <TextBox Text="{Binding GainInput, UpdateSourceTrigger=LostFocus}"
+                                                 Style="{StaticResource ReadoutBox}" FontSize="11"
+                                                 HorizontalAlignment="Center" MinWidth="52"
+                                                 GotKeyboardFocus="OnReadoutFocus" KeyDown="OnReadoutKeyDown" />
                                         <Slider Orientation="Vertical" Height="92" Minimum="-15" Maximum="15" Value="{Binding GainDb}"
                                                 TickFrequency="0.5" IsSnapToTickEnabled="True" HorizontalAlignment="Center" Margin="0,4"
                                                 PreviewMouseDoubleClick="OnEqSliderDoubleClick" ToolTip="{DynamicResource S.DoubleClickReset}" />

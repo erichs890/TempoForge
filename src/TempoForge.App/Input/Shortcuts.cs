@@ -32,6 +32,7 @@ public static class Shortcuts
         (Loc.T("KeyWheel"), Loc.T("HelpZoom")),
         (Loc.T("KeyShiftWheel"), Loc.T("HelpPan")),
         (Loc.T("KeyEqDouble"), Loc.T("HelpEqReset")),
+        (Loc.T("KeyClickValue"), Loc.T("HelpTypeValue")),
         ("Ctrl + O", Loc.T("HelpOpen")),
         ("Ctrl + E", Loc.T("HelpExport")),
         ("F1", Loc.T("HelpThis")),

@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using TempoForge.App.Input;
 using TempoForge.App.Localization;
 using TempoForge.Core.Dsp;
 
@@ -22,12 +23,28 @@ public sealed partial class EqBandViewModel : ObservableObject
     public string Label { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(GainText))]
+    [NotifyPropertyChangedFor(nameof(GainText), nameof(GainInput))]
     private double _gainDb;
 
-    public string GainText => GainDb == 0 ? "0" : $"{GainDb:+0.0;−0.0}";
+    public string GainText => GainDb == 0 ? "0" : $"{GainDb:+0.##;−0.##}";
 
-    public void RefreshTexts() => OnPropertyChanged(nameof(GainText));
+    /// <summary>Mostrador editável: aceita um ganho em dB com até duas casas ("2,37", "-4.5").</summary>
+    public string GainInput
+    {
+        get => GainText;
+        set
+        {
+            if (ValueInput.TryParseDecibels(value, -EqualizerViewModel.MaxGainDb, EqualizerViewModel.MaxGainDb, out double db))
+                GainDb = db;
+            OnPropertyChanged();
+        }
+    }
+
+    public void RefreshTexts()
+    {
+        OnPropertyChanged(nameof(GainText));
+        OnPropertyChanged(nameof(GainInput));
+    }
 
     partial void OnGainDbChanged(double value) => _settings.SetEqGainDb(_index, (float)value);
 }
@@ -84,12 +101,24 @@ public sealed partial class EqualizerViewModel : ObservableObject
     [ObservableProperty] private bool _isEnabled = true;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PreampText))]
+    [NotifyPropertyChangedFor(nameof(PreampText), nameof(PreampInput))]
     private double _preampDb;
+
+    public const double MaxGainDb = 15;
+
+    public string PreampInput
+    {
+        get => PreampText;
+        set
+        {
+            if (ValueInput.TryParseDecibels(value, -MaxGainDb, MaxGainDb, out double db)) PreampDb = db;
+            OnPropertyChanged();
+        }
+    }
 
     [ObservableProperty] private EqPreset? _selectedPreset;
 
-    public string PreampText => PreampDb == 0 ? "0 dB" : $"{PreampDb:+0.0;−0.0} dB";
+    public string PreampText => PreampDb == 0 ? "0 dB" : $"{PreampDb:+0.##;−0.##} dB";
 
     partial void OnIsEnabledChanged(bool value) => _settings.EqEnabled = value;
 
@@ -114,6 +143,7 @@ public sealed partial class EqualizerViewModel : ObservableObject
     public void RefreshTexts()
     {
         OnPropertyChanged(nameof(PreampText));
+        OnPropertyChanged(nameof(PreampInput));
         foreach (EqBandViewModel band in Bands) band.RefreshTexts();
     }
 

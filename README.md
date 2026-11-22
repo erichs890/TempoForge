@@ -15,6 +15,7 @@ sem Electron nem webview.
 - Exportação em WAV ou MP3 com todos os ajustes, do arquivo inteiro ou só do trecho A-B.
 - Biblioteca de pastas, arquivos recentes e arrastar-e-soltar.
 - Ajustes salvos por música e restaurados ao reabrir.
+- Valores digitáveis: clique no mostrador da velocidade (aceita `0,75`, `1.25x` ou `75%`) ou de uma banda do equalizador (dB) e digite com até duas casas decimais.
 - Zoom na waveform (roda do mouse, botões ou direto no trecho A-B) para marcar pontos com precisão.
 - Temas escuro e claro, e interface em português ou inglês, trocados na hora.
 

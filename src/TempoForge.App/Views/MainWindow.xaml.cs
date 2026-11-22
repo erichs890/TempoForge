@@ -209,6 +209,28 @@ public partial class MainWindow : Window
 
     private void OnZoomLoopClick(object sender, RoutedEventArgs e) => Waveform.ZoomToRange(_vm.LoopA, _vm.LoopB);
 
+    // ---- Mostradores editáveis (velocidade e equalizador) ----
+
+    /// <summary>Ao entrar no mostrador, seleciona tudo: basta digitar o novo valor.</summary>
+    private void OnReadoutFocus(object sender, KeyboardFocusChangedEventArgs e)
+    {
+        if (sender is TextBox box) Dispatcher.BeginInvoke(box.SelectAll, DispatcherPriority.Input);
+    }
+
+    /// <summary>Enter confirma (sair do campo também); Esc é tratado em OnPreviewKeyDown e desfaz.</summary>
+    private void OnReadoutKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        LeaveTextBox();
+        e.Handled = true;
+    }
+
+    private void LeaveTextBox()
+    {
+        Keyboard.ClearFocus();
+        FocusManager.SetFocusedElement(this, this);
+    }
+
     // ---- Equalizador ----
 
     /// <summary>Duplo clique em um controle do equalizador devolve-o a 0 dB.</summary>
@@ -234,7 +256,13 @@ public partial class MainWindow : Window
         if (modifiers == ModifierKeys.Control && key == Key.O) { ShowOpenDialog(); e.Handled = true; return; }
         if (modifiers == ModifierKeys.Control && key == Key.E) { ShowExportDialog(); e.Handled = true; return; }
         if (key == Key.F1) { ShowShortcutHelp(); e.Handled = true; return; }
-        if (key == Key.Escape) { Keyboard.ClearFocus(); FocusManager.SetFocusedElement(this, this); return; }
+        if (key == Key.Escape)
+        {
+            // Desfaz o que foi digitado antes de sair do campo (sair confirmaria o texto).
+            (Keyboard.FocusedElement as TextBox)?.GetBindingExpression(TextBox.TextProperty)?.UpdateTarget();
+            LeaveTextBox();
+            return;
+        }
 
         if (FocusIsTyping) return;
         if (FocusIsList && key is Key.Up or Key.Down or Key.Home or Key.End or Key.Enter) return;
