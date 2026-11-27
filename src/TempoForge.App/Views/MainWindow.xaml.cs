@@ -231,6 +231,13 @@ public partial class MainWindow : Window
         FocusManager.SetFocusedElement(this, this);
     }
 
+    /// <summary>Duplo clique na barra de volume volta a 100 %.</summary>
+    private void OnVolumeDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        _vm.Volume = 100;
+        e.Handled = true;
+    }
+
     // ---- Equalizador ----
 
     /// <summary>Duplo clique em um controle do equalizador devolve-o a 0 dB.</summary>

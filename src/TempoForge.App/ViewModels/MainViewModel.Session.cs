@@ -36,6 +36,7 @@ public sealed partial class MainViewModel
         _settings = _store.LoadSettings();
 
         _restoring = true;
+        Volume = _settings.Volume;
         Equalizer.IsEnabled = _settings.EqEnabled;
         Equalizer.PreampDb = _settings.PreampDb;
         Equalizer.SetGains(_settings.EqGainsDb);
@@ -53,7 +54,7 @@ public sealed partial class MainViewModel
         _saveTimer.Tick += (_, _) => SaveNow();
         PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName is nameof(Speed) or nameof(Semitones) or nameof(Cents)
+            if (e.PropertyName is nameof(Speed) or nameof(Semitones) or nameof(Cents) or nameof(Volume)
                 or nameof(LoopA) or nameof(LoopB) or nameof(IsLooping)) MarkDirty();
         };
         Markers.CollectionChanged += (_, _) => MarkDirty();
@@ -74,6 +75,7 @@ public sealed partial class MainViewModel
     {
         _saveTimer.Stop();
 
+        _settings.Volume = Volume;
         _settings.EqEnabled = Equalizer.IsEnabled;
         _settings.PreampDb = Equalizer.PreampDb;
         _settings.EqGainsDb = Equalizer.GetGains();

@@ -46,6 +46,7 @@ public sealed class AudioEngine : IDisposable
     private volatile bool _playing;
     private double _tempoTarget = 1.0;
     private double _pitchTarget = 1.0;
+    private float _volumeTarget = 1f;
 
     // callback → UI
     private long _positionFrames;
@@ -88,6 +89,16 @@ public sealed class AudioEngine : IDisposable
         get => 12.0 * Math.Log2(Volatile.Read(ref _pitchTarget));
         set => Volatile.Write(ref _pitchTarget, Math.Clamp(Math.Pow(2.0, value / 12.0),
             RubberBandStretcher.MinPitchScale, RubberBandStretcher.MaxPitchScale));
+    }
+
+    /// <summary>
+    /// Volume geral da reprodução, de 0 (mudo) a 1 (integral). É aplicado depois dos efeitos e
+    /// não entra na exportação. A mudança é suavizada para não estalar.
+    /// </summary>
+    public double Volume
+    {
+        get => Volatile.Read(ref _volumeTarget);
+        set => Volatile.Write(ref _volumeTarget, (float)Math.Clamp(value, 0.0, 1.0));
     }
 
     /// <summary>Loop A-B em vigor, ou nulo.</summary>
@@ -316,6 +327,7 @@ public sealed class AudioEngine : IDisposable
         private long _consumedFrames;
         private int _drainFramesLeft;
         private float _gain;
+        private float _volume = 1f;
         private bool _prefilling;
 
         private readonly EffectChain _effects;
@@ -377,6 +389,7 @@ public sealed class AudioEngine : IDisposable
 
             _effects.Process(output);
             ApplyFade(output, frames, playing ? 1f : 0f);
+            ApplyVolume(output, frames, Volatile.Read(ref e._volumeTarget));
 
             long played = Math.Max(0, _consumedFrames - _stretcher.LatencyFrames);
             while (e._jumps.TryPopReached(played, out long streamFrame, out long filePosition))
@@ -453,6 +466,21 @@ public sealed class AudioEngine : IDisposable
                 output[i * 2 + 1] *= gain;
             }
             _gain = gain;
+        }
+
+        /// <summary>Volume geral, com rampa (o curso inteiro leva 10 ms) para não haver degrau.</summary>
+        private void ApplyVolume(Span<float> output, int frames, float target)
+        {
+            float volume = _volume;
+            if (volume == target && target == 1f) return;
+            for (int i = 0; i < frames; i++)
+            {
+                if (volume < target) volume = Math.Min(target, volume + FadeStep);
+                else if (volume > target) volume = Math.Max(target, volume - FadeStep);
+                output[i * 2] *= volume;
+                output[i * 2 + 1] *= volume;
+            }
+            _volume = volume;
         }
 
         public void Dispose() => _stretcher.Dispose();

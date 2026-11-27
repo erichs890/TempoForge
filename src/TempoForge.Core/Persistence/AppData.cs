@@ -25,6 +25,9 @@ public sealed class AppSettings
     public List<string> Recents { get; set; } = [];
     public List<string> LibraryFolders { get; set; } = [];
 
+    /// <summary>Volume geral do app, de 0 a 100.</summary>
+    public double Volume { get; set; } = 100;
+
     public bool EqEnabled { get; set; } = true;
     public double PreampDb { get; set; }
     public double[] EqGainsDb { get; set; } = new double[EffectSettings.EqBandCount];

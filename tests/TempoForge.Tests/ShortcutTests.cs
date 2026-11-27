@@ -75,14 +75,14 @@ public sealed class ShortcutTests : IDisposable
     {
         Text("+");
         Text("=");
-        Assert.Equal(1.10, _vm.Speed, 2);
+        Assert.Equal(1.02, _vm.Speed, 6);
         Text("-");
-        Assert.Equal(1.05, _vm.Speed, 2);
+        Assert.Equal(1.01, _vm.Speed, 6);
 
-        for (int i = 0; i < 100; i++) Text("-");
-        Assert.Equal(0.25, _vm.Speed, 2);
-        for (int i = 0; i < 200; i++) Text("+");
-        Assert.Equal(4.00, _vm.Speed, 2);
+        for (int i = 0; i < 200; i++) Text("-");
+        Assert.Equal(0.25, _vm.Speed, 6);
+        for (int i = 0; i < 500; i++) Text("+");
+        Assert.Equal(4.00, _vm.Speed, 6);
     }
 
     [Fact]
@@ -168,11 +168,14 @@ public sealed class ShortcutTests : IDisposable
         Text("]");
         Text("m");
         _vm.Equalizer.Bands[1].GainDb = 4.5;
+        _vm.Volume = 40;
         _vm.SaveNow();
 
         using var reopened = new MainViewModel();
         reopened.OpenFile(_wave.Path, autoPlay: false);
-        Assert.Equal(0.95, reopened.Speed, 2);
+        Assert.Equal(0.99, reopened.Speed, 6);
+        Assert.Equal(40, reopened.Volume);
+        Assert.Equal("40%", reopened.VolumeText);
         Assert.Equal(1, reopened.Semitones);
         Assert.Equal(5.0, reopened.LoopA, 1);
         Assert.Equal(9.0, reopened.LoopB, 1);

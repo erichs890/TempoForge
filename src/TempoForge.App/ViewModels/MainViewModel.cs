@@ -56,7 +56,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _durationText = "0:00";
     [ObservableProperty] private PeakData? _peaks;
 
-    public const double MinSpeed = 0.25, MaxSpeed = 4.0, SpeedStep = 0.05;
+    public const double MinSpeed = 0.25, MaxSpeed = 4.0, SpeedStep = 0.01;
 
     /// <summary>Velocidade em múltiplos do original (1,00 = normal).</summary>
     [ObservableProperty]
@@ -105,6 +105,26 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void SpeedReset() => Speed = 1.0;
+
+    /// <summary>Volume geral do app, de 0 a 100 %. Não altera o arquivo exportado.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(VolumeText))]
+    private double _volume = 100;
+
+    public string VolumeText => $"{Volume:0}%";
+
+    partial void OnVolumeChanged(double value)
+    {
+        double clamped = Math.Clamp(Math.Round(value), 0, 100);
+        if (clamped != value)
+        {
+            Volume = clamped;
+            return;
+        }
+        // Curva quadrática: o ouvido percebe volume de forma logarítmica, e assim a metade
+        // do curso soa perto de "metade do volume".
+        _engine.Volume = value / 100 * (value / 100);
+    }
 
     public const int MaxSemitones = 12, MaxCents = 50;
 

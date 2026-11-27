@@ -110,6 +110,16 @@
                 <Button DockPanel.Dock="Right" Content="{DynamicResource S.Export}" Click="OnExportClick" IsEnabled="{Binding IsLoaded}"
                         Margin="8,0,0,0" ToolTip="{DynamicResource S.ExportTip}" />
                 <Button DockPanel.Dock="Right" Content="{DynamicResource S.Open}" Click="OnOpenClick" ToolTip="Ctrl+O" />
+                <!-- Volume geral do app -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,16,0"
+                            ToolTip="{DynamicResource S.VolumeTip}">
+                    <TextBlock Text="&#xE767;" FontFamily="{StaticResource IconFont}" FontSize="15"
+                               Foreground="{DynamicResource TextDimBrush}" VerticalAlignment="Center" />
+                    <Slider Width="120" Minimum="0" Maximum="100" Value="{Binding Volume}" Margin="8,0" VerticalAlignment="Center"
+                            SmallChange="1" LargeChange="10" MouseDoubleClick="OnVolumeDoubleClick" />
+                    <TextBlock Text="{Binding VolumeText}" Style="{StaticResource Readout}" FontSize="12" MinWidth="36"
+                               Foreground="{DynamicResource TextDimBrush}" VerticalAlignment="Center" />
+                </StackPanel>
                 <TextBlock Text="{Binding Title}" FontFamily="{StaticResource DisplayFont}" FontSize="22" FontWeight="SemiBold"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,16,0" />
             </DockPanel>
